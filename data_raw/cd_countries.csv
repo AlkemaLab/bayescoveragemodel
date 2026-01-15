@@ -1,0 +1,35 @@
+country,language,iso,has_subnat,has_nat
+Burkina Faso,french,BFA,TRUE,TRUE
+Zambia,english,ZMB,FALSE,TRUE
+Sierra Leone,english,SLE,TRUE,TRUE
+Nigeria,english,NGA,TRUE,TRUE
+Angola,english,AGO,FALSE,TRUE
+Zimbabwe,english,ZWE,TRUE,TRUE
+Ethiopia,english,ETH,TRUE,TRUE
+Guinea,french,GIN,TRUE,TRUE
+Mozambique,english,MOZ,TRUE,TRUE
+Guinea Bissau,english,GNB,TRUE,TRUE
+Kenya,english,KEN,TRUE,TRUE
+Liberia,english,LBR,TRUE,TRUE
+Cabo Verde,english,CPV,FALSE,FALSE
+DRC,french,COD,TRUE,TRUE
+Niger,french,NER,TRUE,TRUE
+Chad,french,TCD,TRUE,TRUE
+Uganda,english,UGA,TRUE,TRUE
+Rwanda,english,RWA,TRUE,TRUE
+Mali,french,MLI,TRUE,TRUE
+Benin,french,BEN,TRUE,TRUE
+Senegal,french,SEN,TRUE,TRUE
+Mauritania,french,MRT,TRUE,TRUE
+Madagascar,french,MDG,TRUE,TRUE
+Namibia,english,NAM,TRUE,TRUE
+Cameroon,french,CMR,TRUE,TRUE
+Central African Republic,french,CAF,TRUE,TRUE
+Cote d'Ivoire,french,CIV,TRUE,TRUE
+Togo,french,TGO,TRUE,TRUE
+Somalia,english,SOM,FALSE,TRUE
+Tanzania,english,TZA,TRUE,TRUE
+South Sudan,english,SSD,FALSE,TRUE
+The Gambia,french,GMB,FALSE,FALSE
+Ghana,english,GHA,TRUE,TRUE
+Malawi,english,MWI,TRUE,TRUE
