@@ -1057,8 +1057,44 @@ fit_model <- function(
     is.null(routine_data) & add_aggregates ~ "fpem_aggregates",
     !is.null(routine_data) & add_aggregates ~ "fpem_routine_aggregates"
   )
+  # Get Stan file path - works for both installed package and devtools::load_all()
+
   stan_file_path <- system.file(paste0("stan/", stanmodelname, ".stan"),
-                                package = "BayesCoverageIndicators")
+                                package = "bayescoveragemodel")
+
+  # Fallback for devtools::load_all() - system.file returns "" when not installed
+ if (stan_file_path == "" || !file.exists(stan_file_path)) {
+    # Try to find package root via pkgload (used by devtools::load_all)
+    if (requireNamespace("pkgload", quietly = TRUE)) {
+      pkg_path <- tryCatch(
+        pkgload::pkg_path(path = system.file(package = "bayescoveragemodel")),
+        error = function(e) NULL
+      )
+      if (is.null(pkg_path) || pkg_path == "") {
+        # Alternative: search in common development locations
+        possible_paths <- c(
+          here::here("../bayescoveragemodel"),
+          file.path(getwd(), "../bayescoveragemodel")
+        )
+        for (p in possible_paths) {
+          if (dir.exists(p)) {
+            pkg_path <- normalizePath(p)
+            break
+          }
+        }
+      }
+      if (!is.null(pkg_path) && pkg_path != "") {
+        stan_file_path <- file.path(pkg_path, "inst", "stan",
+                                    paste0(stanmodelname, ".stan"))
+      }
+    }
+  }
+
+  # Final check
+  if (stan_file_path == "" || !file.exists(stan_file_path)) {
+    stop(paste0("Could not find Stan file: ", stanmodelname, ".stan\n",
+                "Searched path: ", stan_file_path))
+  }
 
   if (compile_model){
     stan_model <- compile_model(variational = variational,
