@@ -54,12 +54,14 @@ get_inno_samples <- function(fit) {
 
 
 
-  # iso_codes <- fit$data %>%
-  #   dplyr::select(iso, name_region) %>%
-  #   unique() %>%
-  #   dplyr::mutate(C = 1:n_countries)
-  iso_codes <- fit$geo_unit_index %>%
-    dplyr::rename(C = c)
+  iso_codes <- fit$data %>%
+    dplyr::select(iso, name_region) %>%
+    unique() %>%
+    dplyr::mutate(C = 1:n_countries)
+  # to do: use this code but then change into cluster or subcluster or
+  # get name_region later!
+  # iso_codes <- fit$geo_unit_index %>%
+  #   dplyr::rename(C = c)
 
   year_index <- fit$time_index %>%
     dplyr::rename(T = t)
