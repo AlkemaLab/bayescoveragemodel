@@ -12,16 +12,32 @@ devtools::load_all(here::here())
 # Load data
 data_folder <- "data_raw"
 regions_dat <- read_csv(here::here(data_folder, "regions.csv"))
+
+# old
 dat <- read_dta(here::here(data_folder, "ICEH_national.dta"))
+
+# or new
+dat <- read_dta(here::here(data_folder, "ICEH_all.long.dta")) %>%
+  # renaming to have same as in dat_old
+  rename(r = r_raw, se = se_raw) %>%
+  mutate(final_year = year)
+
+
 # remove data before 2000, as currently not used in fitting
 dat <- dat %>%
   filter(final_year >= 2000)
 
+names(dat)
+unique(dat$indic)
+dat %>%
+  filter(indic == "anc4")
 # Process data
 dat_anc <- process_data(dat = dat,
                         regions_dat = regions_dat,
                         indicator = "anc4")
-
+dat_anc %>%
+  group_by(subcluster) %>%
+  summarize(meany = mean(year))
 
 
 # Use the explore_data function to plot routine and survey data
