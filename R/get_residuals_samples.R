@@ -14,6 +14,8 @@
 #'   \item{held_out}{Logical indicating if observation was held out}
 #'   \item{iso}{Country ISO code}
 #'   \item{year}{Year of observation}
+#'   \item{cluster}{WHO region cluster (if available in fit$data)}
+#'   \item{subcluster}{Regional subcluster (if available in fit$data)}
 #'   \item{name_region}{Region name}
 #'   \item{draws}{Nested tibble with draw-specific columns:
 #'     \itemize{
@@ -52,6 +54,14 @@ get_residuals_samples <- function(fit) {
     data_series_type = fit$data$data_series_type
   ) %>%
     dplyr::mutate(y_prop = probit(y))
+
+ # Add cluster and subcluster if available in fit$data
+  if ("cluster" %in% names(fit$data)) {
+    y_df$cluster <- fit$data$cluster
+  }
+  if ("subcluster" %in% names(fit$data)) {
+    y_df$subcluster <- fit$data$subcluster
+  }
 
   # Determine if validation run
   is_validation <- any(y_df$held_out)
@@ -111,8 +121,9 @@ get_residuals_samples <- function(fit) {
 
   df <- y_df %>%
     dplyr::left_join(draws_nested, by = "obs_index") %>%
-    dplyr::select(obs_index, y, y_prop, held_out, iso, year, name_region, data_series_type,
-                  draws)
+    dplyr::select(obs_index, y, y_prop, held_out, iso, year,
+                  dplyr::any_of(c("cluster", "subcluster")),
+                  name_region, data_series_type, draws)
 
   return(df)
 }

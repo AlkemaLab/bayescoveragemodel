@@ -8,11 +8,14 @@
 #'   \item{samples}{cmdstan samples with epsilon_innovation CT and eta CT}
 #'   \item{data}{Data frame with iso, country, name_region, year}
 #'   \item{time_index}{Time index mapping with columns t and year}
+#'   \item{geo_unit_index}{Geographic unit index with cluster/subcluster info}
 #'
 #' @return Nested tibble with one row per (iso, year) containing:
 #'   \item{iso}{ISO country code}
 #'   \item{year}{Year}
-#'   \item{name_region}{Region name}
+#'   \item{cluster}{WHO region cluster (if available)}
+#'   \item{subcluster}{Regional subcluster (if available)}
+#'   \item{name_region}{Region name (if available)}
 #'   \item{draws}{Nested tibble with draw-specific columns:
 #'     \itemize{
 #'       \item draw: Posterior draw number
@@ -50,18 +53,19 @@ get_inno_samples <- function(fit) {
       max_obs_yr = max(year, na.rm = TRUE)
     )
 
-  n_countries <- length(unique(model_data$iso))
+  # Use geo_unit_index to get cluster and subcluster info
 
+  iso_codes <- fit$geo_unit_index %>%
+    dplyr::rename(C = c)
 
-
-  iso_codes <- fit$data %>%
-    dplyr::select(iso, name_region) %>%
-    unique() %>%
-    dplyr::mutate(C = 1:n_countries)
-  # to do: use this code but then change into cluster or subcluster or
-  # get name_region later!
-  # iso_codes <- fit$geo_unit_index %>%
-  #   dplyr::rename(C = c)
+  # Add name_region if available in data but not in geo_unit_index
+  if (!"name_region" %in% names(iso_codes) && "name_region" %in% names(fit$data)) {
+    name_region_lookup <- fit$data %>%
+      dplyr::select(iso, name_region) %>%
+      dplyr::distinct()
+    iso_codes <- iso_codes %>%
+      dplyr::left_join(name_region_lookup, by = "iso")
+  }
 
   year_index <- fit$time_index %>%
     dplyr::rename(T = t)
@@ -89,10 +93,18 @@ get_inno_samples <- function(fit) {
       sd_y_prop = get_se_probitofinvprobitprop(level, sd_y),
       y_prop = probit(y)
     ) %>%
-    dplyr::select(iso, year, name_region, draw, eta, sd_y, residual,
+    dplyr::select(iso, year,
+                  dplyr::any_of(c("cluster", "subcluster", "name_region")),
+                  draw, eta, sd_y, residual,
                   level, level_prop, yhat, y, sd_y_prop, y_prop)
 
-  # Nest draws by (iso, year)
+  # Nest draws by (iso, year, cluster, subcluster)
+  # Include cluster/subcluster in grouping so they're preserved in output
+  group_cols <- c("iso", "year")
+  if ("cluster" %in% names(draws)) group_cols <- c(group_cols, "cluster")
+  if ("subcluster" %in% names(draws)) group_cols <- c(group_cols, "subcluster")
+  if ("name_region" %in% names(draws)) group_cols <- c(group_cols, "name_region")
+
   draws_nested <- draws %>%
     tidyr::nest(draws = c(draw, eta, sd_y, residual, level, level_prop,
                           yhat, y, sd_y_prop, y_prop))

@@ -40,7 +40,9 @@ get_eta_samples <- function(fit, year_select = 2023) {
     dplyr::left_join(iso_codes, by = "C") %>%
     dplyr::left_join(year_index, by = "T") %>%
     dplyr::filter(year == year_select,
-                  iso %in% iso_include)
+                  iso %in% iso_include) %>%
+    dplyr::select(iso, year, eta, draw,
+                  dplyr::any_of(c("cluster", "subcluster", "name_region")))
 
   return(draws)
 }
