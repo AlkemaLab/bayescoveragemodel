@@ -4,13 +4,13 @@ plot_hierchecks <- function(fit, is_married){
 
   ### post and prior sigma
   for (parname in c("Omega", "Ptilde", "Betas")){
-    print(plot_prior_post_sigmas(fit = fit, parname = parname))
+    print(localhierarchy::plot_prior_post_sigmas_localhierarchy(fit = fit, parname = parname))
   }
 
   #### mu_raws
-  muraw_omega1a <- plot_mu_raw(fit = fit, parname = "Omega")
-  muraw_ptilde1a <- plot_mu_raw(fit = fit, parname = "Ptilde")
-  muraw_splines1a <- plot_mu_raw(fit = fit, parname = "Betas", morethan1param = TRUE)
+  muraw_omega1a <- localhierarchy::plot_muraw_localhierarchy(fit = fit, parname = "Omega")
+  muraw_ptilde1a <- localhierarchy::plot_muraw_localhierarchy(fit = fit, parname = "Ptilde")
+  muraw_splines1a <- localhierarchy::plot_muraw_localhierarchy(fit = fit, parname = "Betas", morethan1param = TRUE)
 
   # for Omega (1param)
   print(muraw_omega1a[["summary_plots"]][[1]])
@@ -47,23 +47,23 @@ plot_hierchecks <- function(fit, is_married){
 
 
   ### hierarchical parameters
-  omega1a <- posterior_summary_hierparam(fit = fit, parname = "Omega",
+  omega1a <- localhierarchy::posterior_summary_hierparam_localhierarchy(fit = fit, parname = "Omega",
                                          hierarchical_levels = fit$hierarchical_level)
-  ptilde1a <- posterior_summary_hierparam(fit = fit, parname = "Ptilde",
+  ptilde1a <- localhierarchy::posterior_summary_hierparam_localhierarchy(fit = fit, parname = "Ptilde",
                                           hierarchical_levels = fit$hierarchical_asymptote)
-  splines1a <- posterior_summary_hierparam(fit = fit, parname = "Betas",
+  splines1a <- localhierarchy::posterior_summary_hierparam_localhierarchy(fit = fit, parname = "Betas",
                                            hierarchical_levels = fit$hierarchical_splines,
                                            morethan1param =  TRUE)
 
-  p <- plot_posterior_summaries(res = omega1a)
+  p <- localhierarchy::plot_posterior_summaries_localhierarchy(res = omega1a)
   for (i in 1:length(p)){
     print(p[[i]] +  ggtitle(paste0("Omega, ", names(p)[i])))
   }
-  p <- plot_posterior_summaries(res = ptilde1a)
+  p <- localhierarchy::plot_posterior_summaries_localhierarchy(res = ptilde1a)
   for (i in 1:length(p)){
     print(p[[i]] +  ggtitle(paste0("Ptilde, ", names(p)[i])))
   }
-  p <- plot_posterior_summaries(res = splines1a)
+  p <- localhierarchy::plot_posterior_summaries_localhierarchy(res = splines1a)
   for (i in 1:length(p)){
     print(p[[i]] +  ggtitle(paste0("Betas, ", names(p)[i])))
   }
