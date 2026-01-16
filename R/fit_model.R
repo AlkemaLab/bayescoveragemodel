@@ -17,7 +17,7 @@
 #'   primary \code{data} set contains a mix of observations at national and
 #'   subnational levels.
 #'
-#' @param runstep type of run, currently one of "step1a", "step1b", "local_national" (see Details).
+#' @param runstep type of run, currently one of "step1a", "step1ab", "step1b", "local_national" (see Details).
 #' @param global_fit optional object of class `"fpemplus"`, used to obtain fixed
 #'   values to use for some parameters in the current fit (see Details).
 #' @param iso_select ISO code to use for local national run
@@ -79,6 +79,8 @@
 #' The argument \code{runstep} determines the type of run to perform. The
 #' following run steps are supported:
 #' - "step1a": Fit the model without the smoothing term, to estimate longer term trends.
+#' - "step1ab": Fit the model with smoothing terms, estimating all parameters (none fixed).
+#'   Unlike step1b, this does not require a prior fit and estimates everything in one pass.
 #' - "step1b": Fit the model with smoothing terms, using a fit from step1a,
 #' to estimate all smoothing and data model parameters.
 #' - "local_national": Fit the model to data from a single country, using a 1b fit.
@@ -188,6 +190,7 @@ fit_model <- function(
   # type of run is defined by runstep:
   runstep, # type of run, step or localnat or localsubnat
   # step1a =  get subcluster parameters, fit w/o ar
+  # step1ab = like step1b but without fixing any parameters (estimates everything including ar)
   # step1b =  fix subcluster info and get ar and data outlier parameters and across country sigmas
   # local_national =  get local results only
   ## not implemented currently: step1: step1a  and step1b combined
@@ -207,9 +210,14 @@ fit_model <- function(
   # for hierarchical parameters, with defaults based on
   # what we've been using for global runs so far (based on data used)
   # for subnational, one level is added
-  hierarchical_level     = c("intercept", "subcluster", "iso"),
-  hierarchical_splines   = c("intercept", "cluster", "iso"),
-  hierarchical_asymptote = c("intercept", "cluster", "iso"),
+  # workflow paper
+  # hierarchical_level     = c("intercept", "subcluster", "iso"),
+  # hierarchical_splines   = c("intercept", "cluster", "iso"),
+  # hierarchical_asymptote = c("intercept", "cluster", "iso"),
+  # test jan 16 (combined with updated groupings)
+  hierarchical_level     = c("intercept", "cluster", "subcluster", "iso"),
+  hierarchical_splines   = c("intercept", "cluster", "subcluster", "iso"),
+  hierarchical_asymptote = c("intercept",  "iso"),
   add_subnational_hierarchy = "admin1", # this is what's added to the hierarchy for subnational
   use_globalsubnat_fromnat = FALSE, # use when fitting a new country in local_subnational
 
@@ -281,10 +289,10 @@ fit_model <- function(
   correlated_smoothing_group = "iso"
   fix_subnat_corr = FALSE
 
-  if (!runstep %in% c("step1a", "step1b", "local_national", "global_subnational", "local_subnational")){
+  if (!runstep %in% c("step1a", "step1ab", "step1b", "local_national", "global_subnational", "local_subnational")){
     stop("runstep not yet implemented!")
   }
-  if(runstep %in% c("step1a", "step1b")){
+  if(runstep %in% c("step1a", "step1ab", "step1b")){
     get_posteriors = TRUE
   }
   if (runstep %in% c("step1a")){
@@ -308,8 +316,22 @@ fit_model <- function(
     # correlated_smoothing = FALSE
     # correlated_smoothing_group = "iso"
     # fix_subnat_corr = FALSE
+  } else if (runstep == "step1ab") {
+    # like step1b but without fixing any parameters
+    # estimates all parameters including smoothing in a single pass
+    print("We fit with ar (smoothing).")
+    smoothing <- TRUE
+    print("We don't fix anything (like step1a)")
+    hierarchical_asymptote_sigmas_fixed = c()
+    hierarchical_asymptote_terms_fixed = c()
+    hierarchical_splines_sigmas_fixed = c()
+    hierarchical_splines_terms_fixed = c()
+    hierarchical_level_sigmas_fixed = c()
+    hierarchical_level_terms_fixed = c()
+    fix_smoothing = FALSE
+    fix_nonse = FALSE
   } else {
-    # all other runs, NOT 1a
+    # all other runs, NOT 1a or 1ab
     if (is.null(global_fit)){
       globalstepname <- dplyr::case_when(
         runstep == "step1b" ~ "1a",
@@ -1274,12 +1296,13 @@ fit_model <- function(
   }
 
 
-  if (runstep %in% c("step1a", "step1b", "global_subnational") | save_post_summ){
+  if (runstep %in% c("step1a", "step1ab", "step1b", "global_subnational") | save_post_summ){
     result$post_summ <- get_posterior_summaries_andfindpar(result)
     # we may not need this extra saving
     saveRDS(result, file.path(output_dir, paste0(indicator, "_fit_wpostsumm.rds")))
     stepname <- dplyr::case_when(
       runstep == "step1a" ~ "1a",
+      runstep == "step1ab" ~ "1ab",
       runstep == "step1b" ~ "1b",
       TRUE ~ runstep
     )
