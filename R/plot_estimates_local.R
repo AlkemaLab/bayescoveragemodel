@@ -7,6 +7,7 @@
 #' @param results3 Optional third model fit.
 #' @param results4 Optional fourth model fit.
 #' @param modelnames Optional names of the models to display in the plot legend.
+#' @param iso_codes Optional character vector of ISO codes to plot. If NULL, plots all countries.
 #' @param save_plots Boolean indicator, if set to TRUE plots will be saved in output directory of results fit.
 #' @param output_folder Folder to save plots in, if save_plots is TRUE, to overwrite where plots are saved.
 #'
@@ -21,6 +22,7 @@ plot_estimates_local_all <- function(results,
                                      results3 = NULL,
                                      results4 = NULL,
                                      modelnames =  c("model1", "model2", "model3", "model4"),
+                                     iso_codes = NULL,
                                      save_plots = FALSE,
                                      output_folder = NULL,
                                      add_caption = FALSE,
@@ -30,7 +32,7 @@ plot_estimates_local_all <- function(results,
 
   plot_name <- "fit"
 
-  plot_caption <- "Survey data from DHS and MICS are shown in red and blue, with vertical bars indicating how uncertain each survey point is.\nIf available, routine data from CAM2024 are shown in black. The lines represent the model’s point estimates with shaded areas\nhighlighting uncertainty (in red if routine data were included, black/green otherwise)."
+  plot_caption <- "Survey data from DHS and MICS are shown in red and blue, with vertical bars indicating how uncertain each survey point is.\nIf available, routine data from CAM2024 are shown in black. The lines represent the model's point estimates with shaded areas\nhighlighting uncertainty (in red if routine data were included, black/green otherwise)."
 
   subnational <- ifelse("admin1" %in% names(results$posteriors$temporal), TRUE, FALSE)
 
@@ -50,7 +52,25 @@ plot_estimates_local_all <- function(results,
     country_codes <- model_country_codes
   }
 
+ # Filter to requested ISO codes if provided
+  if (!is.null(iso_codes)) {
+    missing_codes <- iso_codes[!iso_codes %in% country_codes]
+    if (length(missing_codes) > 0) {
+      warning("Some iso_codes not found in fit: ", paste(missing_codes, collapse = ", "))
+    }
+    country_codes <- country_codes[country_codes %in% iso_codes]
+    if (length(country_codes) == 0) {
+      stop("None of the requested iso_codes found in the fit.")
+    }
+  }
+
   fit_data <- results$data
+
+  # Collect all survey types across all countries to be plotted for consistent legends
+  all_survey_types <- fit_data %>%
+    filter(.data[[geo_col]] %in% country_codes, !is.na(est_indicator)) %>%
+    pull(data_series_type) %>%
+    unique()
 
   if(is.null(indicator_name)){
     indicator_name <- results$data$indic %>% unique()
@@ -84,7 +104,8 @@ plot_estimates_local_all <- function(results,
                               estimates4 = estimates4,
                               modelnames = modelnames,
                               indicator_name = indicator_name,
-                              add_estimates = add_estimates)
+                              add_estimates = add_estimates,
+                              all_survey_types = all_survey_types)
 
 
     if (!is.null(results$dat_routine)){
@@ -172,6 +193,8 @@ plot_estimates_local_all <- function(results,
 #' @param estimates4 Optional estimates from a fourth model.
 #' @param modelnames A vector of model names used for plotting. Default is `c("model1", "model2", "model3", "model4")`.
 #' @param indicator_name Name of indicator used for plotting.
+#' @param add_estimates Boolean to show model estimates/ribbons.
+#' @param all_survey_types Optional character vector of all survey types to include in legend (for consistent legends across multiple plots).
 #' @param cols_sourcetypes A named vector of colors for the different data series types (e.g., DHS, MICS, etc.).
 #'
 #' @import ggplot2
@@ -187,6 +210,7 @@ plot_estimates_local <- function(estimates,
                                  modelnames,
                                  indicator_name,
                                  add_estimates = TRUE,
+                                 all_survey_types = NULL,
                                  cols_sourcetypes = c("DHS" = "red",
                                                       "DHS0" = "red",
                                                       "MICS" = "blue",
@@ -218,20 +242,33 @@ plot_estimates_local <- function(estimates,
     )
   }
 
+  # Filter out empty model names (padding from compare_fits)
+  estimates <- estimates %>% filter(model != "")
+
+  # Get unique model names for consistent ordering
+  model_levels <- unique(estimates$model)
+
   p <- estimates %>%
-    ggplot(aes(x = year, y = `50%`, color = model)) +
-    labs(fill = "Model", color = "Model", lty = "Model", x = "Year", y = indicator_name) +
+    ggplot(aes(x = year, y = `50%`)) +
+    labs(x = "Year", y = indicator_name) +
     theme_bw() +
     expand_limits(y = 0)
   if (add_estimates){
     p <- p +
-      geom_line(aes(lty = model), linewidth = 1.2) +
-      geom_ribbon(aes(ymin = `2.5%`, ymax = `97.5%`, fill = model), colour = NA, alpha = 0.3)
+      geom_ribbon(aes(ymin = `2.5%`, ymax = `97.5%`, fill = model),
+                  colour = NA, alpha = 0.3, show.legend = FALSE) +
+      geom_line(aes(color = model, lty = model), linewidth = 1.2) +
+      scale_color_discrete(name = "Model", limits = model_levels) +
+      scale_linetype_discrete(name = "Model", limits = model_levels)
   }
 
   if (!is.null(filtered_data)) {
     filtered_data <- filtered_data %>%
       mutate(included = ifelse(held_out == 1, "No", "Yes"))
+
+    # Use all_survey_types if provided for consistent legend across plots
+    survey_limits <- if (!is.null(all_survey_types)) all_survey_types else NULL
+
     p <- p +
       new_scale_color() +
       geom_errorbar(data = filtered_data,
@@ -239,7 +276,8 @@ plot_estimates_local <- function(estimates,
                         ymax = up_indicator, color = data_series_type), alpha = 0.3, width = 0.1) +
       geom_point(data = filtered_data,
                  aes(y = est_indicator, x = year, color = data_series_type)) +
-      scale_colour_manual(values = cols_sourcetypes)
+      scale_colour_manual(values = cols_sourcetypes, name = "Survey type",
+                          limits = survey_limits, drop = FALSE)
   }
 
   return(p)
