@@ -132,29 +132,10 @@ explore_data <- function(data, indicator_col, indicator_se_col = NULL, data_type
       colour = if (!is.null(data_types_col)) "Data type" else NULL
     ) +
     theme_bw() +
-    facet_wrap(facet_formula)
+    facet_wrap(facet_formula) +
+    geom_smooth(aes(group = 1))
 
   plots[[1]] <- p1
-
-  # Plot rate of change over time with conditional faceting
-  p2 <- ggplot(data, aes_mapping) +
-    geom_point() +
-    labs(
-      title = paste0("Annualised rate of change of ", title_name, " over time"),
-      x = "Year",
-      y = "Rate of change",
-      colour = if (!is.null(data_types_col)) "Data type" else NULL
-    ) +
-    theme_bw() +
-    facet_wrap(facet_formula)
-
-  # If routine data exists, add it to the rate of change plot
-  if (!is.null(routine_data)) {
-    p2 <- p2 +
-      geom_point(data = routine_data, aes(x = year, y = routine_rate_of_change, colour = "Routine data"))
-  }
-
-  plots[[2]] <- p2
 
   # Update aes mapping for rate of change vs level
   aes_mapping <- if (!is.null(data_types_col)) {
@@ -172,6 +153,29 @@ explore_data <- function(data, indicator_col, indicator_se_col = NULL, data_type
     )
   }
 
+
+  # Plot rate of change over time with conditional faceting
+  p2 <- ggplot(data, aes_mapping) +
+    geom_point() +
+    labs(
+      title = paste0("Annualised rate of change of ", title_name, " over time"),
+      x = "Year",
+      y = "Rate of change",
+      colour = if (!is.null(data_types_col)) "Data type" else NULL
+    ) +
+    theme_bw() +
+    facet_wrap(facet_formula)+
+    geom_smooth(aes(group = 1))
+
+  # If routine data exists, add it to the rate of change plot
+  if (!is.null(routine_data)) {
+    p2 <- p2 +
+      geom_point(data = routine_data, aes(x = year, y = routine_rate_of_change, colour = "Routine data"))
+  }
+
+  plots[[2]] <- p2
+
+
   # Plot rate of change vs level with conditional faceting
   p3 <- ggplot(data %>% filter(!is.na(annualised_rate_of_change)), aes_mapping) +
     geom_point() +
@@ -182,7 +186,9 @@ explore_data <- function(data, indicator_col, indicator_se_col = NULL, data_type
       colour = if (!is.null(data_types_col)) "Data type" else NULL
     ) +
     theme_bw() +
-    facet_wrap(facet_formula)
+    facet_wrap(facet_formula)+
+    geom_smooth(aes(group = 1)) #+
+    #geom_smooth(method.args = list(family = "symmetric", span = 2), se = FALSE)
 
   # If routine data exists, add it to the rate of change vs level plot
   if (!is.null(routine_data)) {

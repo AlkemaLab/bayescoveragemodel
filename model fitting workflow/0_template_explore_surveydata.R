@@ -31,6 +31,7 @@ names(dat)
 unique(dat$indic)
 dat %>%
   filter(indic == "anc4")
+
 # Process data
 dat_anc <- process_data(dat = dat,
                         regions_dat = regions_dat,
@@ -42,27 +43,32 @@ dat_anc %>%
 
 # Use the explore_data function to plot routine and survey data
 plots_anc <- explore_data(
-  data = dat_anc, # survey data to explore
+  data = dat_anc%>%filter(data_series_type == "DHS"), # survey data to explore
   indicator_col = "indicator", # Coverage indicator column
   group_col = "country", # Grouping column
   data_types_col = "data_series_type",
   indicator_name = "ANC4", # Custom plot title
+  region_col = "cluster"
 )
+plots_anc[[3]]
 
-
+# same for other indicators
 dat_ideliv <- process_data(dat = dat,
                         regions_dat = regions_dat,
                         indicator = "ideliv")
-
+dat_ideliv %>%
+  group_by(subcluster) %>%
+  summarize(meany = mean(year), n = n())
 
 
 # Use the explore_data function to plot routine and survey data
 plots_ideliv <- explore_data(
-  data = dat_ideliv, # survey data to explore
+  data = dat_ideliv %>%filter(data_series_type == "DHS"), # survey data to explore
   indicator_col = "indicator", # Coverage indicator column
   group_col = "country", # Grouping column
   data_types_col = "data_series_type",
   indicator_name = "Facility-based deliveries", # Custom plot title
+  region_col = "cluster"
 )
 
 
@@ -75,21 +81,16 @@ dat_vdpt <- process_data(dat = dat,
 
 # Use the explore_data function to plot routine and survey data
 plots_vdpt <- explore_data(
-  data = dat_vdpt, # survey data to explore
+  data = dat_vdpt%>%filter(data_series_type == "DHS"), # survey data to explore
   indicator_col = "indicator", # Coverage indicator column
   group_col = "country", # Grouping column
   data_types_col = "data_series_type",
   indicator_name = "Vaccination coverage", # Custom plot title
+  region_col = "cluster"
 )
 
 
-plots_anc[[1]]
-
-plots_ideliv[[1]]
-
-plots_vdpt[[1]]
-
-# additional plots used in paper
+# to make plots with data ~ time for selected countries
 dat_all <- process_data(dat = dat,
                          regions_dat = regions_dat,
                          indicator = "all")
