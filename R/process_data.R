@@ -1,4 +1,14 @@
 
+#' Title
+#'
+#' @param dat data frame with iso, year, indic, r (indicator), se, source, final_year columns
+#' @param regions_dat data frame with iso and cluster columns
+#' @param indicator character, default "ideliv"
+#'
+#' @returns processed data frame
+#' @export
+#'
+#' @examples
 process_data <- function(dat,
                          regions_dat,
                          indicator = "ideliv"
