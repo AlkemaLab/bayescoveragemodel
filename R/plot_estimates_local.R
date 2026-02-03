@@ -221,11 +221,15 @@ plot_estimates_local <- function(estimates,
                                                       "Routine data" = "black")
                                  ) {
 
-  model <- NULL
+  #model <- NULL
+  # temp fix for model names when just plotting one model
+  estimates <-
+    estimates %>%
+    mutate(model = modelnames[1])
 
   if (!is.null(estimates2)){
     estimates <- bind_rows(
-      estimates %>% mutate(model = modelnames[1]),
+      estimates, # %>% mutate(model = modelnames[1]),
       estimates2 %>% mutate(model = modelnames[2])
     )
   }
