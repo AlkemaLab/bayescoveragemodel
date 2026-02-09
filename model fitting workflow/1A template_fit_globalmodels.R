@@ -38,7 +38,7 @@ regions_dat <- read_csv(here::here(data_folder, "regions.csv"))
 
 
 # Choose an indicator
-indicator_select <- "anc4"#"vdpt"#"ideliv"#  #"anc4""vdpt"#
+indicator_select <- "vdpt"#"anc4"#"vdpt"#"ideliv"#  #"anc4""vdpt"#
 
 
 # process data, do this once
@@ -55,11 +55,13 @@ fit1a <- fit_model(runstep = "step1a",
                   se = "se_invprobit_indicator",
                   get_posteriors = TRUE,
                  # generate_quantities = FALSE,
+                 model_name = "rw2",
+                 runnumber = "rw2",
                   chains = 4
                   #test
-                  ,
-                  iter_sampling = 10,
-                  iter_warmup = 5
+                  # ,
+                  # iter_sampling = 10,
+                  # iter_warmup = 5
         )
 
 ### start step 1b
