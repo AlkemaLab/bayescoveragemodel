@@ -221,6 +221,10 @@ fit_model <- function(
   add_subnational_hierarchy = "admin1", # this is what's added to the hierarchy for subnational
   use_globalsubnat_fromnat = FALSE, # use when fitting a new country in local_subnational
 
+
+  # model name: model_name
+  model_name = "spline", # defaults to "spline", "rw2" can be used
+
   # Out-of-sample validation
   # to do: check that combi of held_out and validation_cutoff_year are still used correctly
   held_out = FALSE,
@@ -815,7 +819,6 @@ fit_model <- function(
   stan_data[[paste0(parname, "_scalarprior_mean")]] <- 0
   stan_data[[paste0(parname, "_prior_sd_sigma_estimate")]] <- 1
 
-
   hier_data[["Omega_data"]] <- hierarchical_data(geo_unit_index, hierarchical_level)
   hier_stan_data[["Omega"]] <- hierarchical_param_stan_data(
     global_fit = global_fit,
@@ -824,26 +827,53 @@ fit_model <- function(
     hierarchical_terms_fixed = hierarchical_level_terms_fixed,
     hierarchical_sigmas_fixed = hierarchical_level_sigmas_fixed)
 
-  stan_data[["Betas_isvector"]] <- TRUE
-  parname <- "Betas"
+
+  stan_data[["Omega_isvector"]] <- FALSE
+  parname <- "Omega"
   stan_data[[paste0(parname, "_scalarprior_sd")]] <- 2
-  stan_data[[paste0(parname, "_scalarprior_mean")]] <- -1 #  # Beta is negative
+  stan_data[[paste0(parname, "_scalarprior_mean")]] <- 0
   stan_data[[paste0(parname, "_prior_sd_sigma_estimate")]] <- 1
 
-  # k is being calculated somewhere.... replaces this
-  stan_data[["Betas_k_terms"]] <- stan_spline_data[["k"]]
-  hier_data[["Betas_data"]] <- hierarchical_data(geo_unit_index, hierarchical_splines)
+  # for rw2
+  if (model_name == "rw2"){
+    hier_data[["gamma_data"]] <- hierarchical_data(geo_unit_index,
+                                                   # use hier from splines
+                                                   hierarchical_splines)
+    hier_stan_data[["gamma"]] <- hierarchical_param_stan_data(
+      global_fit = global_fit,
+      param_name ="gamma",
+      param_data = hier_data[["gamma_data"]],
+      hierarchical_terms_fixed = hierarchical_level_terms_fixed,
+      hierarchical_sigmas_fixed = hierarchical_level_sigmas_fixed)
+    stan_data[["gamma_isvector"]] <- FALSE
+    parname <- "gamma"
+    stan_data[[paste0(parname, "_scalarprior_sd")]] <- 2
+    stan_data[[paste0(parname, "_scalarprior_mean")]] <- 0
+    stan_data[[paste0(parname, "_prior_sd_sigma_estimate")]] <- 1
 
-  hier_stan_data[["Betas"]] <- hierarchical_param_stan_data(
-    global_fit = global_fit,
-    param_name = "Betas",
-    param_data = hier_data[["Betas_data"]],
-    hierarchical_terms_fixed = hierarchical_splines_terms_fixed,
-    hierarchical_sigmas_fixed = hierarchical_splines_sigmas_fixed)
+  }
+  #else {
+    stan_data[["Betas_isvector"]] <- TRUE
+    parname <- "Betas"
+    stan_data[[paste0(parname, "_scalarprior_sd")]] <- 2
+    stan_data[[paste0(parname, "_scalarprior_mean")]] <- -1 #  # Beta is negative
+    stan_data[[paste0(parname, "_prior_sd_sigma_estimate")]] <- 1
 
-  hier_stan_data[["Betas_lower_bound"]] <- Betas_lower_bound
-  hier_stan_data[["Betas_upper_bound"]] <- Betas_upper_bound
-  hier_stan_data <- purrr::list_flatten(hier_stan_data, name_spec = "{inner}")
+    # k is being calculated somewhere.... replaces this
+    stan_data[["Betas_k_terms"]] <- stan_spline_data[["k"]]
+    hier_data[["Betas_data"]] <- hierarchical_data(geo_unit_index, hierarchical_splines)
+
+    hier_stan_data[["Betas"]] <- hierarchical_param_stan_data(
+      global_fit = global_fit,
+      param_name = "Betas",
+      param_data = hier_data[["Betas_data"]],
+      hierarchical_terms_fixed = hierarchical_splines_terms_fixed,
+      hierarchical_sigmas_fixed = hierarchical_splines_sigmas_fixed)
+
+    hier_stan_data[["Betas_lower_bound"]] <- Betas_lower_bound
+    hier_stan_data[["Betas_upper_bound"]] <- Betas_upper_bound
+    hier_stan_data <- purrr::list_flatten(hier_stan_data, name_spec = "{inner}")
+ # }
 
   # if there are maxes for a sigma, update to get max for that sigma
   if (!is.null(global_fit)){
@@ -1074,6 +1104,7 @@ fit_model <- function(
 
   #### reading and loading stan model
   stanmodelname <- case_when(
+    model_name == "rw2" ~ "rw2",
     is.null(routine_data) & !add_aggregates ~ "fpem",
     !is.null(routine_data) & !add_aggregates ~ "fpem_routine",
     is.null(routine_data) & add_aggregates ~ "fpem_aggregates",
@@ -1284,7 +1315,8 @@ fit_model <- function(
 
   if (get_posteriors){
     cat("Extracting posteriors...\n")
-    result$posteriors <- process_fit(result, parallel_chains = ifelse(is.null(chains), 1, chains),
+    result$posteriors <- process_fit(result,
+                                     parallel_chains = ifelse(is.null(chains), 1, chains),
                                      save_eps = FALSE,
                                      add_aggregates = add_aggregates,
                                      save_nontemporal  = FALSE)

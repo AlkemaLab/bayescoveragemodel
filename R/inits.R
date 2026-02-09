@@ -111,6 +111,21 @@ init_fun <- function(chain_id, stan_data){
                ))
   }
 
+  if ("gamma_n_sigma_estimate" %in% names(stan_data)){
+    if (stan_data$gamma_raw_n_terms_estimate > 0){
+      inits <- c(inits,
+                 list(
+                   gamma_raw_estimate = (rnorm(stan_data$gamma_raw_n_terms_estimate, 0, 0.01))
+                 ))
+    }
+     if (stan_data$gamma_n_sigma_estimate > 0){
+       inits <- c(inits,
+                  list(
+                    gamma_sigma_estimate_reverse = sort(abs(rnorm(stan_data$gamma_n_sigma_estimate, 0, 0.01)))
+                  ))
+    }
+  }
+
   if (!stan_data$fix_subnat_corr){
     inits <- c(inits,
                list(
