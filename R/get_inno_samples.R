@@ -71,8 +71,10 @@ get_inno_samples <- function(fit) {
     dplyr::rename(T = t)
 
   # Extract both epsilon_innovation and eta in a single call (much faster)
-  draws <- fit$samples$draws(c("epsilon_innovation", "eta")) %>%
-    tidybayes::spread_draws(epsilon_innovation[C, T], eta[C, T]) %>%
+  draws <- fit$samples$draws(c("epsilon_innovation",
+                               "epsilon", "eta")) %>%
+    tidybayes::spread_draws(epsilon_innovation[C, T], epsilon[C, T],
+                            eta[C, T]) %>%
     dplyr::ungroup() %>%
     dplyr::select(-.chain, -.iteration) %>%
     dplyr::rename(draw = .draw) %>%
@@ -95,7 +97,7 @@ get_inno_samples <- function(fit) {
     ) %>%
     dplyr::select(iso, year,
                   dplyr::any_of(c("cluster", "subcluster", "name_region")),
-                  draw, eta, sd_y, residual,
+                  draw, epsilon, eta, sd_y, residual,
                   level, level_prop, yhat, y, sd_y_prop, y_prop)
 
   # Nest draws by (iso, year, cluster, subcluster)
@@ -106,7 +108,7 @@ get_inno_samples <- function(fit) {
   if ("name_region" %in% names(draws)) group_cols <- c(group_cols, "name_region")
 
   draws_nested <- draws %>%
-    tidyr::nest(draws = c(draw, eta, sd_y, residual, level, level_prop,
+    tidyr::nest(draws = c(draw, epsilon, eta, sd_y, residual, level, level_prop,
                           yhat, y, sd_y_prop, y_prop))
 
   return(draws_nested)

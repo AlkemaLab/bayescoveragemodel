@@ -18,6 +18,8 @@ cache
 *.zip
 *.exe
 fpem*
+rw2*
+!rw2*.stan
 !fpem*.stan
 BayesCoverageIndicators.Rproj
 *_files/

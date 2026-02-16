@@ -261,9 +261,10 @@ plot_estimates_local <- function(estimates,
     p <- p +
       geom_ribbon(aes(ymin = `2.5%`, ymax = `97.5%`, fill = model),
                   colour = NA, alpha = 0.3, show.legend = FALSE) +
-      geom_line(aes(color = model, lty = model), linewidth = 1.2) +
-      scale_color_discrete(name = "Model", limits = model_levels) +
-      scale_linetype_discrete(name = "Model", limits = model_levels)
+      geom_line(aes(color = model, lty = model), linewidth = 1.2)
+    #+
+    #  scale_color_discrete(name = "Model", limits = model_levels) +
+    #  scale_linetype_discrete(name = "Model", limits = model_levels)
   }
 
   if (!is.null(filtered_data)) {
