@@ -13,7 +13,6 @@ get_standata_routine(
 }
 \arguments{
 \item{service_statistic_df}{tibble with  iso; admin1 for subnat; routine; sd_routine; routine_roc; sd_routine_roc; year
-
 filtered to pop (eg country)}
 
 \item{hyper_param}{mean and sd hyperparameters for roc data model}

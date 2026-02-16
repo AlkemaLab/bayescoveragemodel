@@ -8,7 +8,6 @@
 #' @returns processed data frame
 #' @export
 #'
-#' @examples
 process_data <- function(dat,
                          regions_dat,
                          indicator = "ideliv"

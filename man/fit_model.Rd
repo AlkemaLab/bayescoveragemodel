@@ -34,6 +34,7 @@ fit_model(
   hierarchical_asymptote = c("intercept", "iso"),
   add_subnational_hierarchy = "admin1",
   use_globalsubnat_fromnat = FALSE,
+  model_name = "spline",
   held_out = FALSE,
   validation_cutoff_year = NULL,
   validation_run = FALSE,

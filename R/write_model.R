@@ -10,7 +10,6 @@
 #' @returns writes a stan file to the stan directory, naming ...
 #' @export
 #'
-#' @examples
 
 # testing: for no aggr, add_trad
 write_model <- function(add_aggregates = FALSE,

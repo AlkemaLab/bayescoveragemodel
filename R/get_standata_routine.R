@@ -1,16 +1,15 @@
 
 #' get_standata_routine
 #'
-#' @param service_statistic_df # tibble with  iso; admin1 for subnat; routine; sd_routine; routine_roc; sd_routine_roc; year
+#' @param service_statistic_df tibble with  iso; admin1 for subnat; routine; sd_routine; routine_roc; sd_routine_roc; year
 #' filtered to pop (eg country)
-#' @param hyper_param # mean and sd hyperparameters for roc data model
-#' @param time_index # from the model fit
-#' @param geo_unit_index # from the model fit
+#' @param hyper_param mean and sd hyperparameters for roc data model
+#' @param time_index from the model fit
+#' @param geo_unit_index from the model fit
 #'
 #' @returns list with dat_routine (for plotting) and routine_list (to pass to stan)
 #' @export
 #'
-#' @examples
 get_standata_routine <- function(service_statistic_df, # filtered to pop (eg country)
                                  hyper_param,
                                            time_index, geo_unit_index

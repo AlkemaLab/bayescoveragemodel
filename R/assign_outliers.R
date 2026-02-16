@@ -12,7 +12,6 @@
 #' @return dat with nooutlier column added
 #' @export
 #'
-#' @examples
 assign_outliers <- function(dat,
                             outlier_record_ids = NULL # needed for 1b, when adding outlier candidates
 ){
@@ -129,7 +128,6 @@ assign_outliers <- function(dat,
 #' @return vector with record_id_fixed of outliers
 #' @export
 #'
-#' @examples
 identify_outliers_in_global_fit <- function(fit){
   # needs posteriors
   if (is.null( fit$posteriors$temporal))
