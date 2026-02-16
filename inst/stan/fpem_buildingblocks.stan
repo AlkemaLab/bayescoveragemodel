@@ -4,6 +4,7 @@ functions {
 #include ./functions_dm.stan
 #include ./function_eps.stan
 #include ./functions_hiernew.stan
+#include ./functions_transformations.stan
 #include ./functions_processmodel.stan
 #include ./functions_truncatednormal.stan
 

@@ -3,6 +3,7 @@ functions {
 #include ./functions_dm.stan
 #include ./function_eps.stan
 #include ./functions_hiernew.stan
+#include ./functions_transformations.stan
 #include ./functions_rw2processmodel.stan
 #include ./functions_truncatednormal.stan
 
@@ -241,8 +242,6 @@ transformed parameters {
     n_geounit,
     gamma_model_matrix_w, gamma_model_matrix_v, gamma_model_matrix_u);
 
- // to do: update
-  // smoothing
   matrix[n_geounit, T] epsilon;
   epsilon = compute_epsilon(
     smoothing, fix_subnat_corr, fix_smoothing,
@@ -253,8 +252,6 @@ transformed parameters {
     correlated_smoothing, max_cor_smoothing_block_size, n_cor_smoothing_blocks,
     cor_smoothing_block_sizes
   );
-  // to do: update
-  // eta
    matrix[n_geounit, T] tr_eta_obs = rw2process_model_returns_etatr(
                         n_geounit, T, t_star, t_min, t_max,
                         smoothing, epsilon,
@@ -271,7 +268,6 @@ transformed parameters {
       }
     }
   // } else {
-  //   // TO DO: finish
   //   for(i in 1:n_agg_units) {
   //     for(t in 1:T) {
   //       eta_agg[i, t] = sum(eta[, t] .* to_vector(geo_unit_pop_wt[i, , t]));
@@ -354,7 +350,6 @@ model {
 
 generated quantities {
 
-// to do: update
    matrix[n_geounit, T] eta = inv_tr_eta_matrix(
             rw2process_model_outsideobs(tr_eta_obs,
                       n_geounit, T,  t_min, t_max,

@@ -15,7 +15,7 @@ get_eta_samples <- function(fit, year_select = 2023) {
   is_validation <- any(fit$stan_data$held_out == 1)
   if (is_validation){
     # exclude countries that have no data in train or validation
-    # to do: reconsider where to do this
+    # to consider: reconsider where to do this
     y_df <- tibble::tibble(
       held_out = as.logical(fit$stan_data$held_out),
       iso = fit$data$iso

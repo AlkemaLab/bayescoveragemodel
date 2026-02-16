@@ -200,7 +200,7 @@ fit_model <- function(
   ## arguments that are relevant for first global run only (follow from global_fit in other cases)
   t_star = 2010,   # t_star needs to be within the estimation period
   spline_degree = 2,
-  num_knots = 8, # temporarily reduced from 8 for testing, to do!
+  num_knots = 8,
   Betas_upper_bound = 0.5,
   Betas_lower_bound = 0.01,
   Ptilde_low = 0,
@@ -226,7 +226,6 @@ fit_model <- function(
   model_name = "spline", # defaults to "spline", "rw2" can be used
 
   # Out-of-sample validation
-  # to do: check that combi of held_out and validation_cutoff_year are still used correctly
   held_out = FALSE,
   validation_cutoff_year = NULL, # if not NULL, should be a year and is used to define/overwrite held_out set
   validation_run = FALSE,
@@ -238,7 +237,7 @@ fit_model <- function(
   get_posteriors = TRUE,
 
   # outputdir
-  ## minor to do: this is automated, consider updating default
+  ## note: this is automated, consider updating default
   create_runname_and_outputdir = TRUE,
   runnumber = 1, # used if create_runname_and_outputdir , added to runname, increased automatically if directory exists
   rungroup = NULL,
@@ -249,7 +248,6 @@ fit_model <- function(
   iter_sampling = 200,
   iter_warmup = 150,
   add_sample = TRUE, # if FALSE, returns fit w/o samples
-  # minor to do: check settings when finalizing stan model block/decision re instantiate
   compile_model  = TRUE, force_recompile = FALSE,
   seed = 1234,
   refresh = 10,
@@ -626,7 +624,7 @@ fit_model <- function(
   if(is.na(start_year)) start_year <- min(data[[year]])
   if(is.na(end_year)) end_year <- max(data[[year]])
 
-  # to do: just filter, warning if not data!
+  # consider: just filter, warning if no data!
   # Make sure the observed data are within the estimation period
   if(sum(!(data[[year]] %in% start_year:end_year)) > 0) {
     stop(glue::glue("Observations included in dataset that fall outside the estimation period ({start_year} to {end_year})."))
@@ -733,7 +731,7 @@ fit_model <- function(
 
   data <- data %>%
     # add index for DHS
-    # minor to do: remove dependencies on data_series_type?
+    # consider: remove dependencies on data_series_type?
     mutate(isDHS = ifelse(data_series_type == "DHS", 1, 0))
   if (!add_dataoutliers){
     data <- data %>% mutate(nooutlier = 1)

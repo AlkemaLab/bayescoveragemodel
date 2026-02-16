@@ -1,6 +1,6 @@
 
 get_convergence_diagnostics <- function(fit){
-  # to do: finish this function
+  # just the Rhats and some plots for hyperparameters
 
   #### Rhats
   # Rhats etc for all parameters may be too many
