@@ -644,8 +644,13 @@ fit_model <- function(
   )
 
   data[[area]] <- ifelse(data[[area]] == "National", NA, data[[area]])
+  # Sort by hierarchical columns to ensure geo units within the same group
+
+  # (e.g., subnational areas within a country) have consecutive indices.
+  # This ordering is required for correlated_smoothing to work correctly.
   geo_unit_index <- data[!is.na(data[[area]]), ] %>%
     dplyr::distinct(!!! syms(hierarchical_column_names)) %>%
+    dplyr::arrange(!!! syms(hierarchical_column_names)) %>%
     dplyr::mutate(c = 1:n())
 
   source_index <- data %>%
@@ -930,12 +935,8 @@ fit_model <- function(
       stop("`hierarchical_column_names` must be one of the variables used for hierarchical levels.")
     }
 
-    # TODO: This code assumes that in the geo_unit_index,
-    # lowest-level geo areas that are within the same `correlated_smoothing_group`
-    # (e.g. within the same country) are assigned consecutive indices c.
-    # This depends on the order of data being passed in, so maybe we should
-    # also arrange the geo_unit_index by `hierarchical_column_names` at the time
-    # it is created, before we use it?
+    # geo_unit_index is sorted by hierarchical columns (see above), ensuring
+    # that geo units within the same correlated_smoothing_group have consecutive indices.
     unique_group_vals <- unique(geo_unit_index[[correlated_smoothing_group]])
 
     smoothing_data$n_cor_smoothing_blocks <- length(unique_group_vals)

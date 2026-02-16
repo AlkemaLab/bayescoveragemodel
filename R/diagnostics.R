@@ -17,11 +17,26 @@ get_convergence_diagnostics <- function(fit){
   summ <- fit$samples$summary(parnames) %>%
     arrange(desc(rhat))
   write_csv(summ, file = file.path(fit$output_dir, "diagnostics.csv"))
-  # to do: add ess too
-  if (max(summ$rhat) > 1.05){
+
+  # Check Rhat convergence
+  if (max(summ$rhat, na.rm = TRUE) > 1.05){
     warning("Some parameters have Rhat > 1.05")
   } else {
     message("All parameters have Rhat < 1.05")
+  }
+
+  # Check effective sample size (ESS)
+  min_ess_bulk <- min(summ$ess_bulk, na.rm = TRUE)
+  min_ess_tail <- min(summ$ess_tail, na.rm = TRUE)
+  if (min_ess_bulk < 400) {
+    warning(sprintf("Low bulk ESS detected (min = %.0f). Consider running more iterations.", min_ess_bulk))
+  } else {
+    message(sprintf("Bulk ESS adequate (min = %.0f)", min_ess_bulk))
+  }
+  if (min_ess_tail < 400) {
+    warning(sprintf("Low tail ESS detected (min = %.0f). Consider running more iterations.", min_ess_tail))
+  } else {
+    message(sprintf("Tail ESS adequate (min = %.0f)", min_ess_tail))
   }
 
   print("saving some densities")

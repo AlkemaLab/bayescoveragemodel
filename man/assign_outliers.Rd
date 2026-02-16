@@ -2,25 +2,41 @@
 % Please edit documentation in R/assign_outliers.R
 \name{assign_outliers}
 \alias{assign_outliers}
-\title{Assign what observations are given an outlier error in fit
-to do: rename as assign_outlier_errors
-consider case_when or so in this function!
-test that it works with and without outlier_record_ids}
+\title{Assign which observations are modeled with an outlier error term}
 \usage{
 assign_outliers(dat, outlier_record_ids = NULL)
 }
 \arguments{
-\item{dat}{data, columns possible_outlier and possible_outlier_userinput are used if included,
-if not, we use an algorithm that depends on obs year, data series type, and iso}
+\item{dat}{A data frame with survey observations. May contain columns:
+\describe{
+\item{possible_outlier}{Binary indicator if observation is a possible outlier}
+\item{possible_outlier_userinput}{User override for possible_outlier}
+\item{record_id_fixed}{Unique observation identifier (required if outlier_record_ids provided)}
+\item{data_series_type}{Type of data series (e.g., "DHS", "National survey", "Other")}
+\item{any_bias}{Binary indicator for known biases}
+\item{iso}{Country ISO code}
+\item{year}{Observation year}
+}}
 
-\item{outlier_record_ids}{if provided, the obs with these record_ids are assigned to be possibly outlying.}
+\item{outlier_record_ids}{Optional vector of record_id_fixed values to flag as
+possible outliers. Typically obtained from step 1a fit using
+\code{\link{identify_outliers_in_global_fit}}.}
 }
 \value{
-dat with nooutlier column added
+The input data frame with additional column \code{nooutlier} (1 = not an outlier,
+0 = possible outlier that gets an outlier error term).
 }
 \description{
-Assign what observations are given an outlier error in fit
-to do: rename as assign_outlier_errors
-consider case_when or so in this function!
-test that it works with and without outlier_record_ids
+Determines which observations should be assigned an outlier error in the model fit.
+Uses either pre-specified outlier indicators from the data, or an algorithm based
+on observation year, data series type, and country.
+}
+\details{
+The function uses the following priority for determining outliers:
+\enumerate{
+\item If \code{possible_outlier_userinput} is provided, use that
+\item If \code{possible_outlier} column exists, use that
+\item Otherwise, apply algorithm: DHS surveys before 1990, or observations with
+known biases, are flagged as possible outliers
+}
 }

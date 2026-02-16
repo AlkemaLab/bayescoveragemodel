@@ -1,11 +1,35 @@
 Package: bayescoveragemodel
-Title: What the Package Does (One Line, Title Case)
+Title: Bayesian Transition Models for Health Coverage Indicators
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Authors@R: c(
+    person("Leontine", "Alkema", , "lalkema@umass.edu", role = c("aut", "cre")),
+    person("BayesCoverage Team", role = "ctb")
+    )
+Description: Fits Bayesian hierarchical transition models to health coverage
+    indicators (e.g., ANC4, institutional delivery) using survey and routine
+    data. Implements models using Stan for Bayesian inference, with support for
+    global and local (country-specific) model fitting, out-of-sample validation,
+    and subnational estimation.
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
+Imports:
+    cmdstanr,
+    dplyr,
+    ggplot2,
+    ggpubr,
+    ggnewscale,
+    purrr,
+    readr,
+    rlang,
+    splines,
+    stringr,
+    tibble,
+    tidybayes,
+    tidyr
+Suggests:
+    bayesplot,
+    here,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

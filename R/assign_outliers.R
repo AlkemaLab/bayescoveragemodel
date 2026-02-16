@@ -1,15 +1,33 @@
-
-
-#' Assign what observations are given an outlier error in fit
-#' to do: rename as assign_outlier_errors
-#' consider case_when or so in this function!
-#' test that it works with and without outlier_record_ids
+#' Assign which observations are modeled with an outlier error term
 #'
-#' @param dat data, columns possible_outlier and possible_outlier_userinput are used if included,
-#' if not, we use an algorithm that depends on obs year, data series type, and iso
-#' @param outlier_record_ids if provided, the obs with these record_ids are assigned to be possibly outlying.
+#' Determines which observations should be assigned an outlier error in the model fit.
+#' Uses either pre-specified outlier indicators from the data, or an algorithm based
+#' on observation year, data series type, and country.
 #'
-#' @return dat with nooutlier column added
+#' @param dat A data frame with survey observations. May contain columns:
+#'   \describe{
+#'     \item{possible_outlier}{Binary indicator if observation is a possible outlier}
+#'     \item{possible_outlier_userinput}{User override for possible_outlier}
+#'     \item{record_id_fixed}{Unique observation identifier (required if outlier_record_ids provided)}
+#'     \item{data_series_type}{Type of data series (e.g., "DHS", "National survey", "Other")}
+#'     \item{any_bias}{Binary indicator for known biases}
+#'     \item{iso}{Country ISO code}
+#'     \item{year}{Observation year}
+#'   }
+#' @param outlier_record_ids Optional vector of record_id_fixed values to flag as
+#'   possible outliers. Typically obtained from step 1a fit using
+#'   \code{\link{identify_outliers_in_global_fit}}.
+#'
+#' @return The input data frame with additional column `nooutlier` (1 = not an outlier,
+#'   0 = possible outlier that gets an outlier error term).
+#'
+#' @details
+#' The function uses the following priority for determining outliers:
+#' 1. If `possible_outlier_userinput` is provided, use that
+#' 2. If `possible_outlier` column exists, use that
+#' 3. Otherwise, apply algorithm: DHS surveys before 1990, or observations with
+#'    known biases, are flagged as possible outliers
+#'
 #' @export
 #'
 assign_outliers <- function(dat,
@@ -59,7 +77,7 @@ assign_outliers <- function(dat,
 
 
 
-  print("update to use actual start date in assign_outliers data once we have it")
+  # Note: Using year as proxy for start_date; update when actual start_date available
   dat <- dat %>%
     mutate(start_date = year) %>%
     mutate(isafter1990 = ifelse(start_date > 1990, 1, 0),
