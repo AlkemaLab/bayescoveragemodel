@@ -1,6 +1,9 @@
 
 # fit_globalmodels.R
 
+# this script can be used to fit global models sequentially,
+# eg 1a followed by 1b
+
 # in this script, we will fit the global models (currently referred to as steps 1a and 1b)
 # we use low-ish numbers of iterations and chains to make this possible on laptops
 # for final results/at a later step, we will increase those settings and fit on a server
