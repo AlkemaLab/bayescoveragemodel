@@ -1,0 +1,146 @@
+---
+title: "Model Diagnostics"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+This article describes how to assess model fit and convergence for Bayesian
+transition models.
+
+## Setup
+
+```{r setup}
+library(bayescoveragemodel)
+library(dplyr)
+library(ggplot2)
+library(localhierarchy)
+```
+
+## Load Fitted Models
+
+Load previously fitted models for diagnostics:
+
+```{r load-fits}
+# Choose indicator
+indicator <- "anc4"
+
+# Load step 1a and 1b fits
+fit1a <- get_fit(indicator, runstep = "step1a", folder_suffix = "run_workflow")
+fit1b <- get_fit(indicator, runstep = "step1b", folder_suffix = "run_workflow")
+```
+
+## Visualize Estimates
+
+Create plots for all countries to visually assess model fit:
+
+```{r plot-estimates}
+# Plot estimates from step 1a
+plots_fit1a <- plot_estimates_local_all(
+  results = fit1a,
+  save_plots = TRUE,
+  indicator_name = indicator
+)
+
+# Plot estimates from step 1b
+plots_fit1b <- plot_estimates_local_all(
+  results = fit1b,
+  save_plots = TRUE,
+  indicator_name = indicator
+)
+```
+
+## Convergence Diagnostics
+
+Check MCMC convergence using standard diagnostics:
+
+```{r convergence}
+# Get convergence diagnostics for step 1a
+diag1a <- get_convergence_diagnostics(fit1a)
+print(diag1a)
+
+# Get convergence diagnostics for step 1b
+diag1b <- get_convergence_diagnostics(fit1b)
+print(diag1b)
+```
+
+Key diagnostics to check:
+- **Rhat**: Should be close to 1.0 (< 1.01 is good)
+- **ESS (Effective Sample Size)**: Should be sufficiently large
+- **Divergent transitions**: Should be 0 or very few
+
+## Hierarchical Model Checks
+
+Assess the hierarchical structure of the model:
+
+```{r hier-checks}
+# Plot hierarchical checks for step 1a
+plot_hierchecks(fit1a)
+
+# Plot hierarchical checks for step 1b
+plot_hierchecks(fit1b)
+```
+
+These plots help assess:
+- Prior-posterior comparison for hierarchical parameters
+- Shrinkage behavior across groups
+- Model assumptions about parameter distributions
+
+## Compare Model Fits
+
+Compare estimates from different model runs:
+
+```{r compare-fits}
+# Compare step 1a and 1b fits
+comparison <- compare_fits(fit1a, fit1b)
+```
+
+## Diagnostics for Multiple Indicators
+
+Run diagnostics across all indicators:
+
+```{r all-indicators}
+indicators <- c("anc4", "ideliv", "vdpt")
+
+for (ind in indicators) {
+  cat("\n=== Diagnostics for", ind, "===\n")
+
+  # Load fit
+  fit <- get_fit(ind, runstep = "step1b", folder_suffix = "run_workflow")
+
+  # Check convergence
+  diag <- get_convergence_diagnostics(fit)
+  print(diag)
+
+  # Create plots
+  plot_estimates_local_all(fit, save_plots = TRUE, indicator_name = ind)
+  plot_hierchecks(fit)
+}
+```
+
+## Troubleshooting
+
+### Low ESS or High Rhat
+
+If you see convergence issues:
+1. Increase `iter_sampling` and `iter_warmup`
+2. Increase number of `chains`
+3. Check for data issues or outliers
+4. Consider simplifying the model
+
+### Divergent Transitions
+
+If divergent transitions occur:
+1. Increase `adapt_delta` (default is 0.8, try 0.95 or 0.99)
+2. Check for problematic data points
+3. Review model parameterization
+
+## Next Steps
+
+- [Global Model Fitting](global_model_fitting.html): Full model fitting workflow
+- [Out-of-Sample Validation](validation.html): Assess predictive performance

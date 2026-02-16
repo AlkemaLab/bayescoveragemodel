@@ -1,0 +1,186 @@
+---
+title: "Global Model Fitting"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+This article describes the complete workflow for fitting global Bayesian
+transition models to health coverage indicators. Global models estimate
+hierarchical parameters across all countries, which are then used for
+country-specific (local) estimation.
+
+## Setup
+
+```{r setup}
+library(bayescoveragemodel)
+library(dplyr)
+library(ggplot2)
+library(haven)
+library(cmdstanr)
+library(localhierarchy)
+```
+
+## Load and Process Data
+
+```{r load-data}
+# Read national survey data and region metadata
+data_folder <- "data_raw"
+dat0 <- read_dta(here::here(data_folder, "ICEH_national.dta"))
+regions_dat <- readr::read_csv(here::here(data_folder, "regions.csv"))
+
+# Choose an indicator: "anc4", "ideliv", or "vdpt"
+indicator_select <- "anc4"
+
+# Process data
+dat <- process_data(
+  dat = dat0,
+  regions_dat = regions_dat,
+  indicator = indicator_select
+)
+```
+
+## Write Stan Models
+
+Before fitting, ensure the Stan models are compiled:
+```{r write-models}
+# Run once to compile Stan models
+write_model()
+```
+
+## Option 1: Sequential Fitting (Steps 1a and 1b)
+This approach fits the model in two stages:- **Step 1a**: Fit without smoothing terms to identify outliers- **Step 1b**: Fit with smoothing terms using 1a results
+
+### Step 1a: Initial Fit
+
+```{r fit-1a}
+fit1a <- fit_model(
+  runstep = "step1a",
+  survey_df = dat,
+  y = "invprobit_indicator",
+  se = "se_invprobit_indicator",
+  get_posteriors = TRUE,
+  model_name = "rw2",
+  runnumber = "rw2",
+  chains = 4
+)
+```
+
+### Identify Outliers
+
+```{r identify-outliers}
+# Find possible outliers in step 1a
+fit1a$outliers <- identify_outliers_in_global_fit(fit1a)
+
+# Prepare fit object for step 1b
+fit <- fit1a
+fit$samples <- NULL
+
+# Assign outlier flags to data
+dat3 <- assign_outliers(dat, outlier_record_ids = fit$outliers)
+```
+
+### Step 1b: Fit with Smoothing
+
+```{r fit-1b}
+fit1b <- fit_model(
+  runstep = "step1b",
+  global_fit = fit,
+  y = "invprobit_indicator",
+  se = "se_invprobit_indicator",
+  survey_df = dat3,
+  get_posteriors = TRUE,
+  chains = 4
+)
+```
+
+## Option 2: Combined Fitting (Step 1ab)
+
+For a simpler workflow, use step 1ab which combines both steps:
+```{r fit-1ab}
+fit1ab <- fit_model(
+  runstep = "step1ab",
+  survey_df = dat,
+  y = "invprobit_indicator",
+  se = "se_invprobit_indicator",
+  get_posteriors = TRUE,
+  model_name = "rw2",
+  runnumber = "rw2",
+  chains = 4
+)
+```
+
+## Local Fitting for All Countries
+
+After global fitting, run local models for all countries to obtain final estimates:
+```{r local-fitting}
+fit_local_global <- fit_model(
+  runstep = "local_national",
+  y = "invprobit_indicator",
+  se = "se_invprobit_indicator",
+  survey_df = dat,
+  save_post_summ = TRUE,
+  get_posteriors = TRUE,
+  chains = 4
+)
+```
+
+## Visualize Results
+
+```{r plot-results}
+# Plot estimates for all countries
+p <- plot_estimates_local_all(
+  results = fit_local_global,
+  save_plots = TRUE,
+  indicator_name = indicator_select
+)
+```
+
+## Sampling Settings
+
+For production runs, use default sampling settings (or increase for better convergence):
+```{r sampling-settings}
+# Default settings (recommended for production)
+fit <- fit_model(
+  runstep = "step1ab",
+  survey_df = dat,
+  chains = 4
+  # iter_sampling = 1000 (default)
+  # iter_warmup = 1000 (default)
+)
+```
+
+For testing or quick exploration, use reduced settings:
+```{r test-settings}
+# Test settings (NOT for inference)
+fit <- fit_model(
+  runstep = "step1ab",
+  survey_df = dat,
+  chains = 2,
+  iter_sampling = 10,
+  iter_warmup = 5
+)
+```
+
+## Output Storage
+
+Model fits are stored in a `bayestransitionoutput` folder one level up from
+the project root. Use `get_fit()` to load saved fits:
+```{r load-fit}
+# Load a previously saved fit
+fit <- get_fit(
+  indicator = "anc4",
+  runstep = "step1b",
+  folder_suffix = "run_workflow"
+)
+```
+
+## Next Steps
+
+- [Out-of-Sample Validation](validation.html): Assess predictive performance
+- [Model Diagnostics](diagnostics.html): Check convergence and model fit

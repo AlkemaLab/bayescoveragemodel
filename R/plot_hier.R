@@ -1,4 +1,14 @@
-
+#' Plot hierarchical model checks
+#'
+#' Creates diagnostic plots for hierarchical model parameters including
+#' prior-posterior comparisons and mu_raw summaries.
+#'
+#' @param fit A fitted model object from \code{\link{fit_model}}
+#' @param is_married Unused parameter (kept for compatibility)
+#'
+#' @return NULL (invisibly). Saves hierchecks.pdf to the output directory.
+#'
+#' @export
 plot_hierchecks <- function(fit, is_married){
   pdf(file = file.path(fit$output_dir, "hierchecks.pdf"), width = 12, height = 8)
 

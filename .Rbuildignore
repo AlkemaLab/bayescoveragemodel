@@ -1,2 +1,12 @@
 ^bayescoveragemodel\.Rproj$
 ^\.Rproj\.user$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^vignettes/articles$
+^model fitting workflow$
+^analysis$
+^private$
+^README\.Rmd$
+^CLAUDE\.md$
+^\.claudeignore$

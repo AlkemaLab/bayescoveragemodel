@@ -10,6 +10,17 @@ lookup_t_stars_from_global_fit(
   global_t_stars
 )
 }
+\arguments{
+\item{local_geo_unit_index}{Local geo unit index}
+
+\item{global_geo_unit_index}{Global geo unit index}
+
+\item{global_t_stars}{Global t_stars values}
+}
+\value{
+Vector of t_stars for local fit
+}
 \description{
 Look up t_stars to use in local fit based on the values used in a global fit
 }
+\keyword{internal}

@@ -1,0 +1,76 @@
+url: https://bayescoverage.github.io/bayescoveragemodel/
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, reference, articles]
+    right: [search, github]
+  components:
+    articles:
+      text: Articles
+      menu:
+        - text: "Getting Started"
+        - text: "Quick Start"
+          href: articles/bayescoveragemodel.html
+        - text: "---"
+        - text: "Model Fitting Workflows"
+        - text: "Global Model Fitting"
+          href: articles/global_model_fitting.html
+        - text: "Out-of-Sample Validation"
+          href: articles/validation.html
+        - text: "Model Diagnostics"
+          href: articles/diagnostics.html
+
+reference:
+  - title: "Model Fitting"
+    desc: Core functions for fitting Bayesian transition models
+    contents:
+      - fit_model
+      - write_model
+      - get_fit
+      - load_fit
+  - title: "Data Processing"
+    desc: Functions for preparing data
+    contents:
+      - process_data
+      - explore_data
+  - title: "Outlier Detection"
+    desc: Functions for identifying and handling outliers
+    contents:
+      - identify_outliers_in_global_fit
+      - assign_outliers
+  - title: "Visualization & Output"
+    desc: Functions for plotting and model comparison
+    contents:
+      - plot_estimates_local
+      - plot_estimates_local_all
+      - plot_hierchecks
+      - compare_fits
+  - title: "Diagnostics"
+    desc: Functions for convergence and model checking
+    contents:
+      - get_convergence_diagnostics
+  - title: "Posterior Extraction"
+    desc: Functions for extracting posterior samples
+    contents:
+      - get_eta_samples
+      - get_inno_samples
+      - get_residuals_samples
+  - title: "Routine Data"
+    desc: Functions for routine data integration
+    contents:
+      - get_standata_routine
+      - add_uncertainty_in_obs
+  - title: "Utilities"
+    desc: Helper and transformation functions
+    contents:
+      - probit
+      - inv_probit
+      - backtransform_residuals
+      - get_relative_output_dir
+      - rename_output_folder
+      - get_se_invprobitprop
+      - get_se_logitprop
+      - get_se_probitofinvprobitprop

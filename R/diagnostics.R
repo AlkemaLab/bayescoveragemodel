@@ -1,4 +1,13 @@
-
+#' Get convergence diagnostics for a fitted model
+#'
+#' Computes and saves convergence diagnostics (Rhat, ESS) for hyperparameters
+#' and creates density overlay plots.
+#'
+#' @param fit A fitted model object from \code{\link{fit_model}}
+#'
+#' @return NULL (invisibly). Saves diagnostics.csv and diagnostics.pdf to the output directory.
+#'
+#' @export
 get_convergence_diagnostics <- function(fit){
   # just the Rhats and some plots for hyperparameters
 

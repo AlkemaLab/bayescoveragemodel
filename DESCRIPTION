@@ -3,6 +3,7 @@ Title: Bayesian Transition Models for Health Coverage Indicators
 Version: 0.0.0.9000
 Authors@R: c(
     person("Leontine", "Alkema", , "lalkema@umass.edu", role = c("aut", "cre")),
+    person("Shauna", "Mooney", role = "aut"),
     person("BayesCoverage Team", role = "ctb")
     )
 Description: Fits Bayesian hierarchical transition models to health coverage
@@ -30,6 +31,12 @@ Imports:
     tidyr
 Suggests:
     bayesplot,
+    haven,
     here,
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+VignetteBuilder: knitr
+URL: https://bayescoverage.github.io/bayescoveragemodel/
+BugReports: https://github.com/BayesCoverage/bayescoveragemodel/issues

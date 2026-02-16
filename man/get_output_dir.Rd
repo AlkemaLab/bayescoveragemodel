@@ -9,9 +9,11 @@ get_output_dir(...)
 \arguments{
 \item{...}{character string subdirectories of the bayestransition_output
 folder}
-
-\item{absolute}{path to the folder where output is saved}
+}
+\value{
+absolute path to the folder where output is saved
 }
 \description{
 get directory of output, located in parent of wd
 }
+\keyword{internal}

@@ -3,7 +3,9 @@
 #' @param ... character string subdirectories of the bayestransition_output
 #' folder
 #'
-#' @param absolute path to the folder where output is saved
+#' @return absolute path to the folder where output is saved
+#'
+#' @keywords internal
 get_output_dir <- function(...) {
   do.call(file.path,
           c(list(here::here() %>% dirname(), "bayestransition_output"), ...))
