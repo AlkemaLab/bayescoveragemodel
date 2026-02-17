@@ -24,7 +24,7 @@ devtools::load_all(path_bayescoveragemodel)
 data_folder <- "data_raw"
 
 #read subnational data and region info
-regions_dat <- read_csv(here::here(data_folder, "regions.csv"))
+regions_dat <- read_csv(here::here(data_folder, "regions_updated.csv"))
 # subnational data
 dat0 <- read_csv(here::here(data_folder, "ICEH_adm1_dataforcurrentregions.csv"))
 # let's rename into admin1

@@ -48,7 +48,7 @@ if (data_folder == "") {
 
 # Load regions metadata
 regions_dat <- readr::read_csv(
-  file.path(data_folder, "regions.csv"),
+  file.path(data_folder, "regions_updated.csv"),
   show_col_types = FALSE
 )
 ```
@@ -106,7 +106,6 @@ fit <- fit_model(
   survey_df = dat,
   y = "invprobit_indicator",
   se = "se_invprobit_indicator",
-  model_name = "rw2",
   runnumber = "test_run",
   chains = 2,
   # Test settings for quick demonstration

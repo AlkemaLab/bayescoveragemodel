@@ -1,5 +1,8 @@
 ---
 title: "Model Diagnostics"
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r, include = FALSE}
@@ -10,8 +13,8 @@ knitr::opts_chunk$set(
 )
 ```
 
-This article describes how to assess model fit and convergence for Bayesian
-transition models.
+This article describes how to assess model fit and convergence for
+Bayesian transition models.
 
 ## Setup
 
@@ -70,9 +73,12 @@ print(diag1b)
 ```
 
 Key diagnostics to check:
-- **Rhat**: Should be close to 1.0 (< 1.01 is good)
-- **ESS (Effective Sample Size)**: Should be sufficiently large
-- **Divergent transitions**: Should be 0 or very few
+
+-   **Rhat**: Should be close to 1.0 (\< 1.01 is good)
+
+-   **ESS (Effective Sample Size)**: Should be sufficiently large
+
+-   **Divergent transitions**: Should be 0 or very few
 
 ## Hierarchical Model Checks
 
@@ -87,9 +93,12 @@ plot_hierchecks(fit1b)
 ```
 
 These plots help assess:
-- Prior-posterior comparison for hierarchical parameters
-- Shrinkage behavior across groups
-- Model assumptions about parameter distributions
+
+-   Prior-posterior comparison for hierarchical hyperparameters
+
+-   Shrinkage behavior across groups
+
+-   Model assumptions about parameter distributions
 
 ## Compare Model Fits
 
@@ -123,24 +132,7 @@ for (ind in indicators) {
 }
 ```
 
-## Troubleshooting
-
-### Low ESS or High Rhat
-
-If you see convergence issues:
-1. Increase `iter_sampling` and `iter_warmup`
-2. Increase number of `chains`
-3. Check for data issues or outliers
-4. Consider simplifying the model
-
-### Divergent Transitions
-
-If divergent transitions occur:
-1. Increase `adapt_delta` (default is 0.8, try 0.95 or 0.99)
-2. Check for problematic data points
-3. Review model parameterization
-
 ## Next Steps
 
-- [Global Model Fitting](global_model_fitting.html): Full model fitting workflow
-- [Out-of-Sample Validation](validation.html): Assess predictive performance
+-   [Out-of-Sample Validation](validation.html): Assess predictive
+    performance

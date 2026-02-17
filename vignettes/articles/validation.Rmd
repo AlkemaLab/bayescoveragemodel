@@ -30,7 +30,8 @@ library(localhierarchy)
 # Read data
 data_folder <- "data_raw"
 dat0 <- read_dta(here::here(data_folder, "ICEH_national.dta"))
-regions_dat <- readr::read_csv(here::here(data_folder, "regions.csv"))
+regions_dat <- readr::read_csv(
+  here::here(data_folder, "regions_updated.csv"))
 
 # Choose indicator
 indicator_select <- "anc4"
@@ -67,7 +68,6 @@ fit_val <- fit_model(
   se = "se_invprobit_indicator",
   get_posteriors = TRUE,
   chains = 4,
-  model_name = "rw2",
   validation_cutoff_year = validation_cutoff_year
 )
 ```
@@ -104,7 +104,6 @@ for (cutoff in cutoff_years) {
     survey_df = dat,
     get_posteriors = TRUE,
     chains = 4,
-    model_name = "rw2",
     runnumber = paste0("val_", cutoff),
     validation_cutoff_year = cutoff
   )

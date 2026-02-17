@@ -41,7 +41,13 @@
 #' @param add_dataoutliers boolean indicator of whether to include data outliers in 1b
 #'
 #' @param extra_stan_data list of additional data to pass to Stan model
-
+#'
+#' @param model_name character string specifying the model to fit. Options are:
+#'   \itemize{
+#'     \item \code{"spline"} (default): Transition model, ARIMA(1,1,0) with spline-based drift.
+#'     \item \code{"rw2"}: Local rate of change model, ARIMA(1,2,0)
+#'   }
+#'
 #' @param get_posteriors boolean indicator of whether to return posterior samples
 #'
 #' @param held_out binary vector indicating which observations are held out. Set to FALSE to hold out no observations.

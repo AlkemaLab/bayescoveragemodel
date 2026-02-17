@@ -32,7 +32,8 @@ library(localhierarchy)
 # Read national survey data and region metadata
 data_folder <- "data_raw"
 dat0 <- read_dta(here::here(data_folder, "ICEH_national.dta"))
-regions_dat <- readr::read_csv(here::here(data_folder, "regions.csv"))
+regions_dat <- readr::read_csv(
+  here::here(data_folder, "regions_updated.csv"))
 
 # Choose an indicator: "anc4", "ideliv", or "vdpt"
 indicator_select <- "anc4"
@@ -47,11 +48,42 @@ dat <- process_data(
 
 ## Write Stan Models
 
-Before fitting, ensure the Stan models are compiled:
+Before fitting, ensure the Stan models is written:
+(We can remove this step if shipped with package)
 ```{r write-models}
 # Run once to compile Stan models
 write_model()
 ```
+
+## Choosing a Model
+
+The `model_name` argument in `fit_model()` determines which temporal model is used:
+- **`"spline"`** (default): Transition model, ARIMA(1,1,0) with spline-based drift term.
+
+- **`"rw2"`**: Local rate of change, ARIMA(1,2,0).
+
+```{r model-choice}
+# Using the spline model (default)
+fit_spline <- fit_model(
+  runstep = "step1ab",
+  survey_df = dat,
+  model_name = "spline",  # default, can be omitted
+  chains = 4
+)
+
+# Using the RW2 model
+fit_rw2 <- fit_model(
+  runstep = "step1ab",
+  survey_df = dat,
+  model_name = "rw2",
+  runnumber = "rw2",
+  chains = 4
+)
+```
+
+The choice between models depends on the application. The RW2 model tends to
+produce smoother estimates while the spline model offers more flexibility in
+capturing non-linear trends.
 
 ## Option 1: Sequential Fitting (Steps 1a and 1b)
 This approach fits the model in two stages:- **Step 1a**: Fit without smoothing terms to identify outliers- **Step 1b**: Fit with smoothing terms using 1a results
@@ -65,8 +97,6 @@ fit1a <- fit_model(
   y = "invprobit_indicator",
   se = "se_invprobit_indicator",
   get_posteriors = TRUE,
-  model_name = "rw2",
-  runnumber = "rw2",
   chains = 4
 )
 ```
@@ -109,8 +139,6 @@ fit1ab <- fit_model(
   y = "invprobit_indicator",
   se = "se_invprobit_indicator",
   get_posteriors = TRUE,
-  model_name = "rw2",
-  runnumber = "rw2",
   chains = 4
 )
 ```

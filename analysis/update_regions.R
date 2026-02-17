@@ -11,7 +11,8 @@ library(tidyverse)
 
 # Load regions data
 data_folder <- "data_raw"
-regions_dat <- read_csv(here::here(data_folder, "regions.csv"), show_col_types = FALSE)
+regions_dat <- read_csv(here::here(data_folder, "regions.csv"),
+                        show_col_types = FALSE)
 
 # Check current values for Vietnam and Mongolia
 cat("Current values for Vietnam:\n")

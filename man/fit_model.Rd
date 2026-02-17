@@ -115,6 +115,12 @@ spline coefficients (see Details).}
 \item{hierarchical_asymptote}{vector specifying hierarchical structure for
 asymptote (see Details).}
 
+\item{model_name}{character string specifying the model to fit. Options are:
+\itemize{
+\item \code{"spline"} (default): Transition model, ARIMA(1,1,0) with spline-based drift.
+\item \code{"rw2"}: Local rate of change model, ARIMA(1,2,0)
+}}
+
 \item{held_out}{binary vector indicating which observations are held out. Set to FALSE to hold out no observations.}
 
 \item{validation_cutoff_year}{year to use for out-of-sample validation, overwrites held_out (to confirm it does)}
