@@ -42,7 +42,7 @@ row_vector get_rw2_1pop_returns_etatr(
   // to do: add requirement somewhere that tmin <= tstar-1
   for(q in 1:(t_star - t_min)) {
     int t = t_star - q;
-    tr_eta[t] = 2*tr_eta[t +1] - tr_eta[t + 2]  - smoothing*epsilon[ t + 2];
+    tr_eta[t] = 2*tr_eta[t +1] - tr_eta[t + 2]  + smoothing*epsilon[ t + 2];
   }
   // to do: fix
   // right now, added nonsense value for eta outside observation period
@@ -94,7 +94,7 @@ row_vector get_rw2_1pop_outsideobs(
   if (t_min > 1){
     for(q in 1:(t_min - 1)) {
       int t = t_min - q;
-      tr_eta[t] = 2*tr_eta[t + 1] - tr_eta[t +2]  - smoothing*epsilon[ t + 2];
+      tr_eta[t] = 2*tr_eta[t + 1] - tr_eta[t +2]  + smoothing*epsilon[ t + 2];
     }
   }
   return(tr_eta);
