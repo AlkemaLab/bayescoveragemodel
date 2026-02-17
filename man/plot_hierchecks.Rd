@@ -4,12 +4,13 @@
 \alias{plot_hierchecks}
 \title{Plot hierarchical model checks}
 \usage{
-plot_hierchecks(fit, is_married)
+plot_hierchecks(fit, model_name = "spline")
 }
 \arguments{
 \item{fit}{A fitted model object from \code{\link{fit_model}}}
 
-\item{is_married}{Unused parameter (kept for compatibility)}
+\item{model_name}{Character string specifying the model type. Either "spline"
+(checks Omega, Ptilde, Betas) or "rw2" (checks Omega, gamma). Default is "spline".}
 }
 \value{
 NULL (invisibly). Saves hierchecks.pdf to the output directory.
