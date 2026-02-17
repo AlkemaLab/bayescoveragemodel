@@ -2,7 +2,7 @@
 % Please edit documentation in R/process_data.R
 \name{process_data}
 \alias{process_data}
-\title{Title}
+\title{Process survey data for a selected indicator}
 \usage{
 process_data(dat, regions_dat, indicator = "ideliv")
 }
@@ -17,5 +17,5 @@ process_data(dat, regions_dat, indicator = "ideliv")
 processed data frame
 }
 \description{
-Title
+Process survey data for a selected indicator
 }

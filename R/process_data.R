@@ -1,5 +1,5 @@
 
-#' Title
+#' Process survey data for a selected indicator
 #'
 #' @param dat data frame with iso, year, indic, r (indicator), se, source, final_year columns
 #' @param regions_dat data frame with iso and cluster columns

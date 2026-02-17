@@ -52,8 +52,8 @@ reference:
     desc: Functions for convergence and model checking
     contents:
       - get_convergence_diagnostics
-  - title: "Posterior Extraction"
-    desc: Functions for extracting posterior samples
+  - title: "Extraction for model checks"
+    desc: Functions for extracting posterior samples of residuals, innovation terms, and etas.
     contents:
       - get_eta_samples
       - get_inno_samples
