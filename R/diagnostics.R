@@ -4,11 +4,13 @@
 #' and creates density overlay plots.
 #'
 #' @param fit A fitted model object from \code{\link{fit_model}}
+#' @param model_name Character string specifying the model type. Either "spline"
+#'   (checks Omega, Ptilde, Betas) or "rw2" (checks Omega, gamma). Default is "spline".
 #'
 #' @return NULL (invisibly). Saves diagnostics.csv and diagnostics.pdf to the output directory.
 #'
 #' @export
-get_convergence_diagnostics <- function(fit){
+get_convergence_diagnostics <- function(fit, model_name = "spline"){
   # just the Rhats and some plots for hyperparameters
 
   #### Rhats
@@ -17,11 +19,21 @@ get_convergence_diagnostics <- function(fit){
   # here are some
   # to add param_raw, eg [1: min(30, length(fit$samples$draws("param_raw")))]
 
-  parnames <- c("Ptilde_sigma_estimate",
-                "Omega_sigma_estimate",
-                "Betas_sigma_estimate",
-                "nonse_estimate",
-                "global_shrinkage_dm_estimate", "sqrt_caux_dm_estimate")
+  # Determine parameters based on model type
+  if (model_name == "spline") {
+    parnames <- c("Ptilde_sigma_estimate",
+                  "Omega_sigma_estimate",
+                  "Betas_sigma_estimate",
+                  "nonse_estimate",
+                  "global_shrinkage_dm_estimate", "sqrt_caux_dm_estimate")
+  } else if (model_name == "rw2") {
+    parnames <- c("Omega_sigma_estimate",
+                  "gamma_sigma_estimate",
+                  "nonse_estimate",
+                  "global_shrinkage_dm_estimate", "sqrt_caux_dm_estimate")
+  } else {
+    stop("model_name must be either 'spline' or 'rw2'")
+  }
   # add ar parameters
   summ <- fit$samples$summary(parnames) %>%
     arrange(desc(rhat))
