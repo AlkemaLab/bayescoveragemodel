@@ -22,6 +22,7 @@ plot_hierchecks <- function(fit, model_name = "spline"){
   }
 
   pdf(file = file.path(fit$output_dir, "hierchecks.pdf"), width = 12, height = 8)
+  on.exit(dev.off(), add = TRUE)
 
   ### post and prior sigma
   for (parname in parnames){
@@ -116,6 +117,5 @@ plot_hierchecks <- function(fit, model_name = "spline"){
     }
   }
 
-  dev.off()
-  return(NULL)
+  return(invisible(NULL))
 }
