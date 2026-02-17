@@ -85,10 +85,24 @@ The choice between models depends on the application. The RW2 model tends to
 produce smoother estimates while the spline model offers more flexibility in
 capturing non-linear trends.
 
-## Option 1: Sequential Fitting (Steps 1a and 1b)
-This approach fits the model in two stages:- **Step 1a**: Fit without smoothing terms to identify outliers- **Step 1b**: Fit with smoothing terms using 1a results
+## Global Model Fitting (Step 1ab)
 
-### Step 1a: Initial Fit
+The primary workflow uses step 1ab to fit the global model:
+```{r fit-1ab}
+fit1ab <- fit_model(
+  runstep = "step1ab",
+  survey_df = dat,
+  y = "invprobit_indicator",
+  se = "se_invprobit_indicator",
+  get_posteriors = TRUE,
+  chains = 4
+)
+```
+
+## Step 1a for Residual Extraction (Optional)
+
+Step 1a can be run separately to extract residuals for model checking. This
+is not needed for validation runs, only for main model fits:
 
 ```{r fit-1a}
 fit1a <- fit_model(
@@ -99,48 +113,9 @@ fit1a <- fit_model(
   get_posteriors = TRUE,
   chains = 4
 )
-```
 
-### Identify Outliers
-
-```{r identify-outliers}
-# Find possible outliers in step 1a
-fit1a$outliers <- identify_outliers_in_global_fit(fit1a)
-
-# Prepare fit object for step 1b
-fit <- fit1a
-fit$samples <- NULL
-
-# Assign outlier flags to data
-dat3 <- assign_outliers(dat, outlier_record_ids = fit$outliers)
-```
-
-### Step 1b: Fit with Smoothing
-
-```{r fit-1b}
-fit1b <- fit_model(
-  runstep = "step1b",
-  global_fit = fit,
-  y = "invprobit_indicator",
-  se = "se_invprobit_indicator",
-  survey_df = dat3,
-  get_posteriors = TRUE,
-  chains = 4
-)
-```
-
-## Option 2: Combined Fitting (Step 1ab)
-
-For a simpler workflow, use step 1ab which combines both steps:
-```{r fit-1ab}
-fit1ab <- fit_model(
-  runstep = "step1ab",
-  survey_df = dat,
-  y = "invprobit_indicator",
-  se = "se_invprobit_indicator",
-  get_posteriors = TRUE,
-  chains = 4
-)
+# Extract residuals
+residuals <- get_residuals_samples(fit = fit1a)
 ```
 
 ## Local Fitting for All Countries

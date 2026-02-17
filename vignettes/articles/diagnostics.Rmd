@@ -30,12 +30,15 @@ library(localhierarchy)
 Load previously fitted models for diagnostics:
 
 ```{r load-fits}
-# Choose indicator
+# Choose indicator and model type
 indicator <- "anc4"
+model_name <- "spline"  # or "rw2"
 
-# Load step 1a and 1b fits
-fit1a <- get_fit(indicator, runstep = "step1a", folder_suffix = "run_workflow")
-fit1b <- get_fit(indicator, runstep = "step1b", folder_suffix = "run_workflow")
+# Load step 1ab fit (main global model)
+fit <- get_fit(indicator, runstep = "step1ab", folder_suffix = "run_workflow")
+
+# Load validation fit
+fit_val <- get_fit(indicator, runstep = "step1ab", folder_suffix = "val_workflow")
 ```
 
 ## Visualize Estimates
@@ -43,16 +46,18 @@ fit1b <- get_fit(indicator, runstep = "step1b", folder_suffix = "run_workflow")
 Create plots for all countries to visually assess model fit:
 
 ```{r plot-estimates}
-# Plot estimates from step 1a
-plots_fit1a <- plot_estimates_local_all(
-  results = fit1a,
+# Plot estimates from main fit
+plots_main <- plot_estimates_local_all(
+  results = fit,
   save_plots = TRUE,
   indicator_name = indicator
 )
 
-# Plot estimates from step 1b
-plots_fit1b <- plot_estimates_local_all(
-  results = fit1b,
+# Compare main fit vs validation
+plots_comparison <- plot_estimates_local_all(
+  results = fit,
+  results2 = fit_val,
+  modelnames = c("Main", "Validation"),
   save_plots = TRUE,
   indicator_name = indicator
 )
@@ -63,13 +68,9 @@ plots_fit1b <- plot_estimates_local_all(
 Check MCMC convergence using standard diagnostics:
 
 ```{r convergence}
-# Get convergence diagnostics for step 1a
-diag1a <- get_convergence_diagnostics(fit1a)
-print(diag1a)
-
-# Get convergence diagnostics for step 1b
-diag1b <- get_convergence_diagnostics(fit1b)
-print(diag1b)
+# Get convergence diagnostics
+diag <- get_convergence_diagnostics(fit)
+print(diag)
 ```
 
 Key diagnostics to check:
@@ -85,11 +86,8 @@ Key diagnostics to check:
 Assess the hierarchical structure of the model:
 
 ```{r hier-checks}
-# Plot hierarchical checks for step 1a
-plot_hierchecks(fit1a)
-
-# Plot hierarchical checks for step 1b
-plot_hierchecks(fit1b)
+# Plot hierarchical checks
+plot_hierchecks(fit)
 ```
 
 These plots help assess:
@@ -102,11 +100,21 @@ These plots help assess:
 
 ## Compare Model Fits
 
-Compare estimates from different model runs:
+Compare estimates from different model runs (e.g., spline vs RW2):
 
 ```{r compare-fits}
-# Compare step 1a and 1b fits
-comparison <- compare_fits(fit1a, fit1b)
+# Load both model types
+fit_spline <- get_fit(indicator, runstep = "step1ab", folder_suffix = "run_spline")
+fit_rw2 <- get_fit(indicator, runstep = "step1ab", folder_suffix = "run_rw2")
+
+# Compare spline and RW2 models
+plots_model_comparison <- plot_estimates_local_all(
+  results = fit_spline,
+  results2 = fit_rw2,
+  modelnames = c("Spline", "RW2"),
+  save_plots = TRUE,
+  indicator_name = indicator
+)
 ```
 
 ## Diagnostics for Multiple Indicators
@@ -120,7 +128,7 @@ for (ind in indicators) {
   cat("\n=== Diagnostics for", ind, "===\n")
 
   # Load fit
-  fit <- get_fit(ind, runstep = "step1b", folder_suffix = "run_workflow")
+  fit <- get_fit(ind, runstep = "step1ab", folder_suffix = "run_workflow")
 
   # Check convergence
   diag <- get_convergence_diagnostics(fit)
