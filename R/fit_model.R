@@ -775,7 +775,7 @@ fit_model <- function(
     T = nrow(time_index),
     N = nrow(data),
     S = nrow(source_index),
-    held_out = held_out,
+    held_out = data$held_out,
     isDHS = data$isDHS,
     nooutlier = data$nooutlier,
     any_bias = data$any_bias,
@@ -1210,7 +1210,7 @@ fit_model <- function(
     smoothing = smoothing,
     add_dataoutliers = add_dataoutliers,
 
-    held_out = held_out,
+    held_out = data$held_out,
     # tau_prior = tau_prior,
     # rho_prior = rho_prior,
     # fix_subnat_corr = fix_subnat_corr,
