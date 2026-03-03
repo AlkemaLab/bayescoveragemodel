@@ -4,10 +4,13 @@
 \alias{get_convergence_diagnostics}
 \title{Get convergence diagnostics for a fitted model}
 \usage{
-get_convergence_diagnostics(fit)
+get_convergence_diagnostics(fit, model_name = "spline")
 }
 \arguments{
 \item{fit}{A fitted model object from \code{\link{fit_model}}}
+
+\item{model_name}{Character string specifying the model type. Either "spline"
+(checks Omega, Ptilde, Betas) or "rw2" (checks Omega, gamma). Default is "spline".}
 }
 \value{
 NULL (invisibly). Saves diagnostics.csv and diagnostics.pdf to the output directory.
