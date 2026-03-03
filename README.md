@@ -21,7 +21,7 @@ Dependencies
   started](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) guide.
 
 - R package `localhierarchy`, available at
-  [github.com/AlkemaLab/localhierarchy](github.com/AlkemaLab/localhierarchy).
+  [github.com/AlkemaLab/localhierarchy](https://github.com/AlkemaLab/localhierarchy).
   You can install it using
 
 `remotes::install_github("AlkemaLab/localhierarchy")`
@@ -37,7 +37,9 @@ transition models to health coverage indicators. We use minimal sampling
 iterations for demonstration purposes.
 
 For full model fitting with proper sampling settings, see the [Global
-Model Fitting](global_model_fitting.html) article.
+Model
+Fitting](https://alkemalab.github.io/bayescoveragemodel/articles/global_model_fitting.html)
+article.
 
 ## Setup
 
@@ -153,11 +155,14 @@ p[[1]]
 For production model fitting with proper sampling:
 
 1.  **Global Model Fitting**: See the [Global Model
-    Fitting](global_model_fitting.html) article for the complete
-    workflow with recommended sampling settings.
+    Fitting](https://alkemalab.github.io/bayescoveragemodel/articles/global_model_fitting.html)
+    article for the complete workflow with recommended sampling
+    settings.
 
-2.  **Validation**: See the [Out-of-Sample Validation](validation.html)
+2.  **Validation**: See the [Out-of-Sample
+    Validation](https://alkemalab.github.io/bayescoveragemodel/articles/validation.html)
     article for assessing predictive performance.
 
-3.  **Diagnostics**: See the [Model Diagnostics](diagnostics.html)
+3.  **Diagnostics**: See the [Model
+    Diagnostics](https://alkemalab.github.io/bayescoveragemodel/articles/diagnostics.html)
     article for convergence checks and hierarchical model assessment.
