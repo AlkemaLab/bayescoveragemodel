@@ -16,3 +16,4 @@ add_uncertainty_in_obs(fit, perc_low = 0.025, perc_up = 0.975)
 \description{
 This function adds uncertainty to observations using the model fit object.
 }
+\keyword{internal}

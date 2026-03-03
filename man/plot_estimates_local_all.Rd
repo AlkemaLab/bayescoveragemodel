@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_estimates_local.R
 \name{plot_estimates_local_all}
 \alias{plot_estimates_local_all}
-\title{Plot local model fits, adding routine data for comparison if included in arguments.}
+\title{Plot model fits, with options to add routine data or additional fits for comparison.}
 \usage{
 plot_estimates_local_all(
   results,
@@ -42,5 +42,5 @@ plot_estimates_local_all(
 \item{output_folder}{Folder to save plots in, if save_plots is TRUE, to overwrite where plots are saved.}
 }
 \description{
-Plot local model fits, adding routine data for comparison if included in arguments.
+Plot model fits, with options to add routine data or additional fits for comparison.
 }

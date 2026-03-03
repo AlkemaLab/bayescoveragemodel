@@ -1,4 +1,4 @@
-#' Plot local model fits, adding routine data for comparison if included in arguments.
+#' Plot model fits, with options to add routine data or additional fits for comparison.
 #'
 #' @param results Model fit.
 #' @param dat_routine Optional routine data to add to model estimates for comparison.
@@ -199,8 +199,7 @@ plot_estimates_local_all <- function(results,
 #'
 #' @import ggplot2
 #' @import ggnewscale
-#'
-#' @export
+#' @keywords internal
 
 plot_estimates_local <- function(estimates,
                                  filtered_data,

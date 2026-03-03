@@ -2,7 +2,8 @@
 % Please edit documentation in R/load_fit.R
 \name{load_fit}
 \alias{load_fit}
-\title{Load an fpemplus fit. This fit should be saved in a folder that contains
+\title{UPDATE: to check if still used.
+Load a fit. This fit should be saved in a folder that contains
 a file named \code{fit.rds} with the fpemplus object as well as csv files produced
 by cmdstanr as a result of the estimation process.}
 \usage{
@@ -15,7 +16,9 @@ load_fit(path)
 object of class fpemplus
 }
 \description{
-Load an fpemplus fit. This fit should be saved in a folder that contains
+UPDATE: to check if still used.
+Load a fit. This fit should be saved in a folder that contains
 a file named \code{fit.rds} with the fpemplus object as well as csv files produced
 by cmdstanr as a result of the estimation process.
 }
+\keyword{internal}

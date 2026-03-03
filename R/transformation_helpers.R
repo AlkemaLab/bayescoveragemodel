@@ -80,7 +80,6 @@ get_se_probitofinvprobitprop <- function(invprobitprop, se_invprobitprop){
 #'   }
 #'
 #' @importFrom dplyr mutate
-#' @export
 backtransform_residuals <- function(df){
   df %>%
     mutate(response = level + residual,

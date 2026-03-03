@@ -28,8 +28,8 @@
 #' 3. Otherwise, apply algorithm: DHS surveys before 1990, or observations with
 #'    known biases, are flagged as possible outliers
 #'
-#' @export
 #'
+#' @keywords internal
 assign_outliers <- function(dat,
                             outlier_record_ids = NULL # needed for 1b, when adding outlier candidates
 ){
@@ -144,7 +144,7 @@ assign_outliers <- function(dat,
 #' @param fit Global fit object with posterior etas and data set that has record_id_fixed
 #'
 #' @return vector with record_id_fixed of outliers
-#' @export
+#' @keywords internal
 #'
 identify_outliers_in_global_fit <- function(fit){
   # needs posteriors

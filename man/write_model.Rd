@@ -2,7 +2,7 @@
 % Please edit documentation in R/write_model.R
 \name{write_model}
 \alias{write_model}
-\title{write model}
+\title{Write Stan models for different model settings.}
 \usage{
 write_model(add_aggregates = FALSE, add_routine = FALSE)
 }
@@ -15,5 +15,5 @@ write_model(add_aggregates = FALSE, add_routine = FALSE)
 writes a stan file to the stan directory, naming ...
 }
 \description{
-write model
+Write Stan models for different model settings.
 }

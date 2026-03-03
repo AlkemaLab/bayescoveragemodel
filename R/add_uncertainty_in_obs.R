@@ -8,7 +8,7 @@
 #'
 #' @importFrom tidybayes spread_draws
 #' @importFrom dplyr group_by summarise pull
-#' @export
+#' @keywords internal
 add_uncertainty_in_obs <- function(fit, perc_low = 0.025, perc_up = 0.975){
 
   yhat_i <- fit$samples$draws("eta_i") %>%

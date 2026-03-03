@@ -15,3 +15,4 @@ vector with record_id_fixed of outliers
 \description{
 identify_outliers_in_global_fit
 }
+\keyword{internal}

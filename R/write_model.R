@@ -2,7 +2,7 @@
 
 
 
-#' write model
+#' Write Stan models for different model settings.
 #'
 #' @param add_aggregates Add national aggregates? makes sense only for subnational all-region run for 1 country
 #' @param  add_routine Add routine data?

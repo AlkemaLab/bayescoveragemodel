@@ -25,21 +25,14 @@ reference:
       - fit_model
       - write_model
       - get_fit
-      - load_fit
   - title: "Data Processing"
     desc: Functions for preparing data
     contents:
       - process_data
       - explore_data
-  - title: "Outlier Detection"
-    desc: Functions for identifying and handling outliers
-    contents:
-      - identify_outliers_in_global_fit
-      - assign_outliers
   - title: "Visualization & Output"
     desc: Functions for plotting and model comparison
     contents:
-      - plot_estimates_local
       - plot_estimates_local_all
       - plot_hierchecks
       - compare_fits
@@ -53,11 +46,6 @@ reference:
       - get_eta_samples
       - get_inno_samples
       - get_residuals_samples
-  - title: "Routine Data"
-    desc: Functions for routine data integration
-    contents:
-      - get_standata_routine
-      - add_uncertainty_in_obs
   - title: "Utilities"
     desc: Helper and transformation functions
     contents:
@@ -69,3 +57,5 @@ reference:
       - get_se_invprobitprop
       - get_se_logitprop
       - get_se_probitofinvprobitprop
+      - identify_outliers_in_global_fit
+      - get_standata_routine
