@@ -1,10 +1,13 @@
 Package: bayescoveragemodel
-Title: Bayesian Transition Models for Health Coverage Indicators
-Version: 0.0.0.9000
+Title: Bayesian Transition Models for Estimating and Forecasting Health Coverage Indicators
+Version: 0.1
 Authors@R: c(
     person("Leontine", "Alkema", , "lalkema@umass.edu", role = c("aut", "cre")),
     person("Shauna", "Mooney", role = "aut"),
-    person("BayesCoverage Team", role = "ctb")
+    person("Sophia", "Kagoye", role = "ctb"),
+    person("Leonardo", "Ferreira", role = "ctb"),
+    person("Roland", "Mady", role = "ctb"),
+    person("Countdown BayesCoverage Team", role = "ctb")
     )
 Description: Fits Bayesian hierarchical transition models to health coverage
     indicators (e.g., ANC4, institutional delivery) using survey and routine

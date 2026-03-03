@@ -14,7 +14,8 @@ knitr::opts_chunk$set(
 ```
 
 This article describes how to assess model fit and convergence for
-Bayesian transition models.
+Bayesian transition models. Results can also be analysed using the
+bayescoveragemodelchecks package.
 
 ## Setup
 
@@ -79,11 +80,10 @@ Key diagnostics to check:
 
 -   **ESS (Effective Sample Size)**: Should be sufficiently large
 
--   **Divergent transitions**: Should be 0 or very few
-
 ## Hierarchical Model Checks
 
-Assess the hierarchical structure of the model:
+Some model parameters are modeled hierarchically. We can check these
+parameters as follows:
 
 ```{r hier-checks}
 # Plot hierarchical checks
@@ -95,8 +95,6 @@ These plots help assess:
 -   Prior-posterior comparison for hierarchical hyperparameters
 
 -   Shrinkage behavior across groups
-
--   Model assumptions about parameter distributions
 
 ## Compare Model Fits
 
@@ -116,31 +114,3 @@ plots_model_comparison <- plot_estimates_local_all(
   indicator_name = indicator
 )
 ```
-
-## Diagnostics for Multiple Indicators
-
-Run diagnostics across all indicators:
-
-```{r all-indicators}
-indicators <- c("anc4", "ideliv", "vdpt")
-
-for (ind in indicators) {
-  cat("\n=== Diagnostics for", ind, "===\n")
-
-  # Load fit
-  fit <- get_fit(ind, runstep = "step1ab", folder_suffix = "run_workflow")
-
-  # Check convergence
-  diag <- get_convergence_diagnostics(fit)
-  print(diag)
-
-  # Create plots
-  plot_estimates_local_all(fit, save_plots = TRUE, indicator_name = ind)
-  plot_hierchecks(fit)
-}
-```
-
-## Next Steps
-
--   [Out-of-Sample Validation](validation.html): Assess predictive
-    performance

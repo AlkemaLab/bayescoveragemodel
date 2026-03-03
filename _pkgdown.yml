@@ -11,11 +11,6 @@ navbar:
     articles:
       text: Articles
       menu:
-        - text: "Getting Started"
-        - text: "Quick Start"
-          href: articles/bayescoveragemodel.html
-        - text: "---"
-        - text: "Model Fitting Workflows"
         - text: "Global Model Fitting"
           href: articles/global_model_fitting.html
         - text: "Out-of-Sample Validation"

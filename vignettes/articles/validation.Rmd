@@ -10,8 +10,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-This article describes how to perform out-of-sample validation to assess the
-predictive performance of Bayesian transition models.
+This article describes how to perform out-of-sample validation to assess the predictive performance of Bayesian transition models.
 
 ## Setup
 
@@ -46,8 +45,7 @@ dat <- process_data(
 
 ## Set Validation Cutoff
 
-Choose a cutoff year for validation. Data with `start_date >= validation_cutoff_year`
-will be held out for validation.
+Choose a cutoff year for validation. Data with `start_date >= validation_cutoff_year` will be held out for validation.
 
 ```{r validation-cutoff}
 # Set validation cutoff year
@@ -85,32 +83,9 @@ plots_val <- plot_estimates_local_all(
 ```
 
 The plots will show:
-- Fitted estimates using training data (before cutoff)
-- Held-out observations (after cutoff) for visual comparison
 
-## Comparing Multiple Cutoff Years
+-   Fitted estimates using training data (before cutoff)
 
-To assess robustness, run validation with different cutoff years:
+-   Held-out observations (after cutoff) for visual comparison
 
-```{r multiple-cutoffs}
-cutoff_years <- c(2015, 2018, 2020)
-
-for (cutoff in cutoff_years) {
-  cat("\nFitting with cutoff year:", cutoff, "\n")
-  cat("Data held out:", round(mean(dat$start_date >= cutoff), 3), "\n")
-
-  fit <- fit_model(
-    runstep = "step1ab",
-    survey_df = dat,
-    get_posteriors = TRUE,
-    chains = 4,
-    runnumber = paste0("val_", cutoff),
-    validation_cutoff_year = cutoff
-  )
-}
-```
-
-## Next Steps
-
-- [Global Model Fitting](global_model_fitting.html): Full model fitting workflow
-- [Model Diagnostics](diagnostics.html): Check convergence and model fit
+Results can be analysed using the bayescoveragemodelchecks package.

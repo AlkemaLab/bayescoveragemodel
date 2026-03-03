@@ -46,44 +46,7 @@ dat <- process_data(
 )
 ```
 
-## Write Stan Models
 
-Before fitting, ensure the Stan models is written:
-(We can remove this step if shipped with package)
-```{r write-models}
-# Run once to compile Stan models
-write_model()
-```
-
-## Choosing a Model
-
-The `model_name` argument in `fit_model()` determines which temporal model is used:
-- **`"spline"`** (default): Transition model, ARIMA(1,1,0) with spline-based drift term.
-
-- **`"rw2"`**: Local rate of change, ARIMA(1,2,0).
-
-```{r model-choice}
-# Using the spline model (default)
-fit_spline <- fit_model(
-  runstep = "step1ab",
-  survey_df = dat,
-  model_name = "spline",  # default, can be omitted
-  chains = 4
-)
-
-# Using the RW2 model
-fit_rw2 <- fit_model(
-  runstep = "step1ab",
-  survey_df = dat,
-  model_name = "rw2",
-  runnumber = "rw2",
-  chains = 4
-)
-```
-
-The choice between models depends on the application. The RW2 model tends to
-produce smoother estimates while the spline model offers more flexibility in
-capturing non-linear trends.
 
 ## Global Model Fitting (Step 1ab)
 
@@ -101,8 +64,7 @@ fit1ab <- fit_model(
 
 ## Step 1a for Residual Extraction (Optional)
 
-Step 1a can be run separately to extract residuals for model checking. This
-is not needed for validation runs, only for main model fits:
+Step 1a can be run separately to extract residuals for model checking. 
 
 ```{r fit-1a}
 fit1a <- fit_model(
@@ -144,31 +106,7 @@ p <- plot_estimates_local_all(
 )
 ```
 
-## Sampling Settings
 
-For production runs, use default sampling settings (or increase for better convergence):
-```{r sampling-settings}
-# Default settings (recommended for production)
-fit <- fit_model(
-  runstep = "step1ab",
-  survey_df = dat,
-  chains = 4
-  # iter_sampling = 1000 (default)
-  # iter_warmup = 1000 (default)
-)
-```
-
-For testing or quick exploration, use reduced settings:
-```{r test-settings}
-# Test settings (NOT for inference)
-fit <- fit_model(
-  runstep = "step1ab",
-  survey_df = dat,
-  chains = 2,
-  iter_sampling = 10,
-  iter_warmup = 5
-)
-```
 
 ## Output Storage
 

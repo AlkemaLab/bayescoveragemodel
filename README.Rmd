@@ -1,5 +1,8 @@
 ---
 output: github_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -15,120 +18,161 @@ knitr::opts_chunk$set(
 
 # BayesCoverageModel
 
-To fit a Bayesian transition model to coverage indicators. 
+R package to fit Bayesian hierarchical transition models to health
+coverage indicators (e.g., ANC4, institutional delivery) using survey
+and routine data. Implements models using Stan for Bayesian inference,
+with support for global and local (country-specific) model fitting,
+out-of-sample validation, and subnational estimation.
+
+This work was supported, in whole or in part, by the Bill & Melinda
+Gates Foundation (INV-001299).
 
 # Installation
 
+Dependencies
 
-To load the package, use
+-   `cmdstanr`: Instructions for installing `cmdstanr` are available in
+    their [Getting
+    started](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) guide.
 
-```{r, eval = FALSE}
-devtools::load_all(here::here())
+-   R package `localhierarchy`, available at
+    [github.com/AlkemaLab/localhierarchy](github.com/AlkemaLab/localhierarchy).
+    You can install it using
+
+`remotes::install_github("AlkemaLab/localhierarchy")`
+
+Install `bayescoveragemodel` from Github:
+
+`remotes::install_github("AlkemaLab/bayescoveragemodel")`
+
+# Getting started
+
+Below we demonstrate a quick example workflow for fitting Bayesian
+transition models to health coverage indicators. We use minimal sampling
+iterations for demonstration purposes.
+
+For full model fitting with proper sampling settings, see the [Global
+Model Fitting](global_model_fitting.html) article.
+
+## Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+library(bayescoveragemodel)
+library(dplyr)
+library(ggplot2)
 ```
 
-# What is where?
+## Load Data
 
-## Private files
+The package includes example survey data for health coverage indicators
+(ANC4, institutional delivery, vaccination).
 
-Any files that you don't want to push to the repository can be stored in the `private` folder. We have set up Git to ignore the `private` folder, so any data you add there will not be tracked by Git or uploaded to the repository. Routine data are also included in that folder (see next)
+```{r load-data}
+# Load survey data
+data_folder <- system.file("extdata", package = "bayescoveragemodel")
 
-## Input data and estimates
+# If using development version with data_raw folder
+if (data_folder == "") {
+  data_folder <- "data_raw"
+}
 
-Publicly available input data are stored in the `data_raw` and `data` folders. `data_raw` currently includes
+# Load regions metadata
+regions_dat <- readr::read_csv(
+  file.path(data_folder, "regions_updated.csv"),
+  show_col_types = FALSE
+)
+```
 
--   national survey data (national as dta)
+## Process Data
 
--   subnational survey data (processed in the repo `submeta`)
+Use `process_data()` to prepare the survey data for model fitting.
 
--   estimates of denominator weights for subnational estimation (processed in the repo `submeta`)
+```{r process-data, eval=FALSE}
+# Load raw survey data (example using haven for .dta files)
+dat0 <- haven::read_dta(file.path(data_folder, "ICEH_national.dta"))
 
--   regional meta information
+# Process data for a specific indicator
+dat <- process_data(
+  dat = dat0,
+  regions_dat = regions_dat,
+  indicator = "anc4"
+)
 
--   meta info on cd countries
+head(dat)
+```
 
--   toy data set for testing the inclusion of routine data
+## Explore Data
 
--   info on indicator definitions (will probably move elsewhere)
+Before fitting models, explore the survey data using `explore_data()`.
 
-The `data` folder currently includes parameter estimates:
+```{r explore-data, eval=FALSE}
+# Create exploration plots
+plots <- explore_data(
 
--   parameter estimates from 1b and global subnational fits, for local fitting
+data = dat,
+  indicator_col = "indicator",
+  group_col = "country",
+  data_types_col = "data_series_type",
+  indicator_name = "ANC4",
+  region_col = "cluster"
+)
 
--   parameter estimates for inclusion of routine data
+# View one of the plots
+plots[[1]]
+```
 
-Routine data are not included in the repository. We recommend storing the routine data locally in the private folder (see template for reading in of routine data).
+## Fit Model (Test Settings)
 
-## Outputs
+Fit a model using test settings with minimal iterations. This runs
+quickly but should not be used for inference.
 
-When doing a run, by default, results are stored locally in a folder called `bayestransitionoutput`, one folder up from the root directory. A subfolder is created with the runname and all results associated with that model fit can be stored there. We found this to work well for FPET, to have all results in one place. The function `get_out_dir` can be used to get the output directory for a specific run.
+```{r fit-model, eval=FALSE}
+# Write Stan models (run once)
+write_model()
 
-For sharing many larger fit objects (with posterior samples), and perhaps results too, we cannot use github. Instead, we should keep those locally and share via some other way. 
+# Fit model with test settings (fast, not for inference)
+fit <- fit_model(
+  runstep = "step1ab",
+  survey_df = dat,
+  y = "invprobit_indicator",
+  se = "se_invprobit_indicator",
+  runnumber = "test_run",
+  # Model defaults to "spline" (a Bayesian transition model), "rw2" argument can be used for fitting an ARIMA(1,2,0) model. 
+  model_name = "spline", 
+  chains = 2,
+  # Test settings for quick demonstration
+  iter_sampling = 10,
+  iter_warmup = 5,
+  get_posteriors = TRUE
+)
+```
 
+## Plot Results
 
+Visualize the fitted estimates.
 
-## Templates, scripts, analysis files
+```{r plot-results, eval=FALSE}
+# Plot estimates for all countries
+p <- plot_estimates_local_all(
+  results = fit,
+  save_plots = FALSE,
+  indicator_name = "anc4"
+)
 
-As of 2025/9/26, we have two folders
+# Display a plot
+p[[1]]
+```
 
--   model fitting workflow
-    -   This contains scripts and templates to explore survey data, fit global models, and do for local fiting (for all countries)
--   analysis
-    -   This contains script for analyses, eg specific outputs we created for the workflow paper, example plots, and a folder to generate country reports we used at cam2025
+# Next Steps
 
-This repo had a lot more (outdated) files prior to the Sep 26 clean up. The previous version is on the `cam2025` branch. We can delete that branch once we've confirmed we are not missing anything useful.
+For production model fitting with proper sampling:
 
-Suggested approach to do analyses:
+1.  **Global Model Fitting**: See the [Global Model
+    Fitting](global_model_fitting.html) article for the complete
+    workflow with recommended sampling settings.
 
--   If analyses/updates to existing files are relevant to all repo users, please add/update in the respective folders. For new files, please use an informative name.
+2.  **Validation**: See the [Out-of-Sample Validation](validation.html)
+    article for assessing predictive performance.
 
--   For files that do not need to be shared, you can save them in your private folder.
-
-# Overview of repositories
-
-In the Bayescoverage organization, we have a number of repositories, each with a different purpose. As per 2025/9/25, we have:
-
--   BayesCoverageIndicators (this repo): for model fitting and analysis
-
--   SubMeta: for processing of subnational survey data, calculating denominator weights, and (I believe) cleaning up regional names/dealing with inconsistencies in names between survey and routine data.
-
--   cdroutine: for everything routine data related: processing, EDA, modeling to estimate the parameters related to data quality. Estimates of model parameters are saved into this BayescoverageIndicators repo for use in modeling. Clean routine data are saved in the `private` folder for use in local model fitting.
-
-The plan is to add an additional repo that is focused just on communication of results (produce summaries, make graphs, produce tables).
-
-# GitHub Issues
-
-We use GitHub Issues to track bugs, feature requests, and other tasks. Here's how to use them effectively:
-
-### Creating an Issue
-
-1.  **Search First**: Before creating a new issue, search the [issue tracker](https://github.com/AlkemaLab/BayesCoverageIndicators/issues) to see if a similar issue already exists.
-2.  **Choose a Descriptive Title**: Use a clear, concise title that summarizes the issue.
-3.  **Provide Details**:
-    -   **For bugs**: Include steps to reproduce, expected behavior, and actual behavior.
-    -   **For feature requests**: Explain the problem your idea solves and describe the proposed solution.
-    -   Add any supporting details, such as screenshots, logs, or code snippets.
-4.  **Add Labels**: When creating an issue, please **use both a type label and a priority label** to help organize and prioritize tasks (see below).
-
-------------------------------------------------------------------------
-
-### Adding Labels
-
-Using labels ensures that issues are categorized and prioritized effectively. When creating or reviewing an issue, assign the following:
-
-#### **Type Labels**
-
--   **`Type: Bug`**: An issue that needs fixing.
--   **`Type: Feature Request`**: A suggestion for new functionality.
--   **`Type: Documentation`**: Issues related to missing or unclear documentation.
--   **`Type: Question`**: General inquiries or requests for clarification.
-
-#### **Priority Labels**
-
--   **`Priority: Critical`**: Blocks progress or requires immediate attention (e.g. major bugs).
--   **`Priority: High`**: Important but not blocking (e.g., key feature bugs, significant enhancements).
--   **`Priority: Medium`**: Useful but not urgent (e.g., minor bugs, general improvements).
--   **`Priority: Low`**: Nice-to-have improvements (e.g., minor changes, non-critical updates).
-
-------------------------------------------------------------------------
-
-Thank you for contributing to BayesCoverageIndicators!
+3.  **Diagnostics**: See the [Model Diagnostics](diagnostics.html)
+    article for convergence checks and hierarchical model assessment.
