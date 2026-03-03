@@ -19,7 +19,6 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports:
-    cmdstanr,
     dplyr,
     ggplot2,
     ggpubr,
@@ -33,12 +32,15 @@ Imports:
     tidybayes,
     tidyr
 Suggests:
+    cmdstanr,
     bayesplot,
     haven,
     here,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
+Remotes:
+    github::AlkemaLab/localhierarchy
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://alkemalab.github.io/bayescoveragemodel/
