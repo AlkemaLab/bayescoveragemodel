@@ -1,0 +1,83 @@
+# Out-of-Sample Validation
+
+This article describes how to perform out-of-sample validation to assess
+the predictive performance of Bayesian transition models.
+
+## Setup
+
+``` r
+library(bayescoveragemodel)
+library(dplyr)
+library(ggplot2)
+library(haven)
+library(cmdstanr)
+library(localhierarchy)
+```
+
+## Load and Process Data
+
+``` r
+# Read data
+data_folder <- "data_raw"
+dat0 <- read_dta(here::here(data_folder, "ICEH_national.dta"))
+regions_dat <- readr::read_csv(
+  here::here(data_folder, "regions_updated.csv"))
+
+# Choose indicator
+indicator_select <- "anc4"
+
+# Process data
+dat <- process_data(
+  dat = dat0,
+  regions_dat = regions_dat,
+  indicator = indicator_select
+)
+```
+
+## Set Validation Cutoff
+
+Choose a cutoff year for validation. Data with
+`start_date >= validation_cutoff_year` will be held out for validation.
+
+``` r
+# Set validation cutoff year
+validation_cutoff_year <- 2018
+
+# Check percentage of data held out
+prop_held_out <- mean(dat$start_date >= validation_cutoff_year)
+cat("Proportion of data held out:", round(prop_held_out, 3), "\n")
+```
+
+## Fit Model with Validation
+
+``` r
+fit_val <- fit_model(
+  runstep = "step1ab",
+  survey_df = dat,
+  y = "invprobit_indicator",
+  se = "se_invprobit_indicator",
+  get_posteriors = TRUE,
+  chains = 4,
+  validation_cutoff_year = validation_cutoff_year
+)
+```
+
+## Visualize Validation Results
+
+Plot the estimates to see how well the model predicts held-out data:
+
+``` r
+plots_val <- plot_estimates_local_all(
+  results = fit_val,
+  save_plots = TRUE,
+  indicator_name = indicator_select
+)
+```
+
+The plots will show:
+
+- Fitted estimates using training data (before cutoff)
+
+- Held-out observations (after cutoff) for visual comparison
+
+Results can be analysed using the bayescoveragemodelchecks package.
