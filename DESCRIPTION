@@ -41,5 +41,5 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-URL: https://bayescoverage.github.io/bayescoveragemodel/
+URL: https://bayescoverage.github.io/bayescoveragemodel/, https://alkemalab.github.io/bayescoveragemodel/
 BugReports: https://github.com/BayesCoverage/bayescoveragemodel/issues
