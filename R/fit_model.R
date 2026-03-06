@@ -764,10 +764,10 @@ fit_model <- function(
   #   summarise(t_max = max(t)) %>%
   #   pull(t_max)
   # t_max <- ifelse(t_max < (t_stars+ 1), t_stars+ 1, t_max)
-  # update: setting t_max to 2024 to avoid issues when including EMUs
+  # update: setting t_max to 2026 to avoid issues when including routine data
   # this includes same dependence on start and end year as does t star
-  t_max <- rep(which(seq(start_year, end_year) == 2024), nrow(geo_unit_index))
-
+  if (end_year < 2026) stop("end_year less than 2026 not tested")
+  t_max <- rep(which(seq(start_year, end_year) == 2026), nrow(geo_unit_index))
 
   # put together stan data
   stan_data <- list(
