@@ -24,15 +24,16 @@ get_convergence_diagnostics <- function(fit, model_name = "spline"){
     parnames <- c("Ptilde_sigma_estimate",
                   "Omega_sigma_estimate",
                   "Betas_sigma_estimate",
-                  "nonse_estimate",
-                  "global_shrinkage_dm_estimate", "sqrt_caux_dm_estimate")
+                  "nonse_estimate")
   } else if (model_name == "rw2") {
     parnames <- c("Omega_sigma_estimate",
                   "gamma_sigma_estimate",
-                  "nonse_estimate",
-                  "global_shrinkage_dm_estimate", "sqrt_caux_dm_estimate")
+                  "nonse_estimate")
   } else {
     stop("model_name must be either 'spline' or 'rw2'")
+  }
+  if (fit$add_dataoutliers){
+    parnames <- c(parnames, "global_shrinkage_dm_estimate", "sqrt_caux_dm_estimate")
   }
   # add ar parameters
   summ <- fit$samples$summary(parnames) %>%
