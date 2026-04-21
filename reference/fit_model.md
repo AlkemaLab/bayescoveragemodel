@@ -42,6 +42,7 @@ fit_model(
   save_post_summ = FALSE,
   generate_quantities = TRUE,
   get_posteriors = TRUE,
+  stan_file_path = NULL,
   create_runname_and_outputdir = TRUE,
   runnumber = 1,
   rungroup = NULL,
@@ -192,11 +193,15 @@ fit_model(
   binary vector indicating whether to simulate data from the fitted
   model
 
-  Setting for where to save things
-
 - get_posteriors:
 
   boolean indicator of whether to return posterior samples
+
+- stan_file_path:
+
+  stan file path (if NULL, uses internal stan file)
+
+  Setting for where to save things
 
 - create_runname_and_outputdir:
 

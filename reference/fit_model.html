@@ -81,6 +81,7 @@
 <span>  save_post_summ <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  generate_quantities <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  get_posteriors <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  stan_file_path <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  create_runname_and_outputdir <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  runnumber <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  rungroup <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -222,12 +223,16 @@ asymptote (see Details).</p></dd>
 
 
 <dt id="arg-generate-quantities">generate_quantities<a class="anchor" aria-label="anchor" href="#arg-generate-quantities"></a></dt>
-<dd><p>binary vector indicating whether to simulate data from the fitted model</p>
-<p>Setting for where to save things</p></dd>
+<dd><p>binary vector indicating whether to simulate data from the fitted model</p></dd>
 
 
 <dt id="arg-get-posteriors">get_posteriors<a class="anchor" aria-label="anchor" href="#arg-get-posteriors"></a></dt>
 <dd><p>boolean indicator of whether to return posterior samples</p></dd>
+
+
+<dt id="arg-stan-file-path">stan_file_path<a class="anchor" aria-label="anchor" href="#arg-stan-file-path"></a></dt>
+<dd><p>stan file path (if NULL, uses internal stan file)</p>
+<p>Setting for where to save things</p></dd>
 
 
 <dt id="arg-create-runname-and-outputdir">create_runname_and_outputdir<a class="anchor" aria-label="anchor" href="#arg-create-runname-and-outputdir"></a></dt>
