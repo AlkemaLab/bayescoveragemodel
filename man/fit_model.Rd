@@ -41,6 +41,7 @@ fit_model(
   save_post_summ = FALSE,
   generate_quantities = TRUE,
   get_posteriors = TRUE,
+  stan_file_path = NULL,
   create_runname_and_outputdir = TRUE,
   runnumber = 1,
   rungroup = NULL,
@@ -127,11 +128,13 @@ asymptote (see Details).}
 
 \item{validation_run}{boolean indicator of whether it's a validation model run or not}
 
-\item{generate_quantities}{binary vector indicating whether to simulate data from the fitted model
-
-Setting for where to save things}
+\item{generate_quantities}{binary vector indicating whether to simulate data from the fitted model}
 
 \item{get_posteriors}{boolean indicator of whether to return posterior samples}
+
+\item{stan_file_path}{stan file path (if NULL, uses internal stan file)
+
+Setting for where to save things}
 
 \item{create_runname_and_outputdir}{boolean indicator of whether to create a runname and output directory}
 

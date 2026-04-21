@@ -55,6 +55,7 @@
 #' @param validation_run boolean indicator of whether it's a validation model run or not
 #'
 #' @param generate_quantities binary vector indicating whether to simulate data from the fitted model
+#' @param stan_file_path stan file path (if NULL, uses internal stan file)
 #'
 #' Setting for where to save things
 #' @param create_runname_and_outputdir boolean indicator of whether to create a runname and output directory
@@ -242,6 +243,7 @@ fit_model <- function(
   # misc
   get_posteriors = TRUE,
 
+  stan_file_path = NULL,
   # outputdir
   ## note: this is automated, consider updating default
   create_runname_and_outputdir = TRUE,
@@ -454,14 +456,14 @@ fit_model <- function(
     if (runstep == "local_national" & !is.null(iso_select)){
       print(paste("We only use data for", iso_select))
       data <- data %>%
-        filter(iso == iso_select)
+        filter(iso %in% iso_select)
     }
   } else {
     print("We use subnational data (but you already knew that)")
     if (runstep == "local_subnational"& !is.null(iso_select)){
       print(paste("We only use data for", iso_select))
       data <- data %>%
-        filter(iso == iso_select)
+        filter(iso %in% iso_select)
     }
   }
 
@@ -1108,17 +1110,19 @@ fit_model <- function(
 
 
   #### reading and loading stan model
-  stanmodelname <- case_when(
-    model_name == "rw2" ~ "rw2",
-    is.null(routine_data) & !add_aggregates ~ "fpem",
-    !is.null(routine_data) & !add_aggregates ~ "fpem_routine",
-    is.null(routine_data) & add_aggregates ~ "fpem_aggregates",
-    !is.null(routine_data) & add_aggregates ~ "fpem_routine_aggregates"
-  )
-  # Get Stan file path - works for both installed package and devtools::load_all()
+  if (is.null(stan_file_path)){
+    stanmodelname <- case_when(
+      model_name == "rw2" ~ "rw2",
+      is.null(routine_data) & !add_aggregates ~ "fpem",
+      !is.null(routine_data) & !add_aggregates ~ "fpem_routine",
+      is.null(routine_data) & add_aggregates ~ "fpem_aggregates",
+      !is.null(routine_data) & add_aggregates ~ "fpem_routine_aggregates"
+    )
+    # Get Stan file path - works for both installed package and devtools::load_all()
 
-  stan_file_path <- system.file(paste0("stan/", stanmodelname, ".stan"),
-                                package = "bayescoveragemodel")
+    stan_file_path <- system.file(paste0("stan/", stanmodelname, ".stan"),
+                                  package = "bayescoveragemodel")
+  }
 
   # Fallback for devtools::load_all() - system.file returns "" when not installed
  if (stan_file_path == "" || !file.exists(stan_file_path)) {
@@ -1282,7 +1286,8 @@ fit_model <- function(
       seed = seed,
       refresh = refresh,
       adapt_delta = adapt_delta,
-      max_treedepth = max_treedepth
+      max_treedepth = max_treedepth,
+      save_cmdstan_config = TRUE
     )
 
     result <- c(result,
@@ -1327,6 +1332,10 @@ fit_model <- function(
                                      save_nontemporal  = FALSE)
     # not sure we still want this class
     # attr(result, "class") <- "fpemplus"
+    if (runstep %in%  c("local_national", "local_subnational")){
+      result$posteriors$temporal <- result$posteriors$temporal %>%
+          filter(year >= 2010)
+    }
     saveRDS(result, file.path(output_dir, paste0(indicator, "_fit_withpost.rds")))
   } else {
     saveRDS(result, file.path(output_dir, paste0(indicator, "_fit_nopost.rds")))
