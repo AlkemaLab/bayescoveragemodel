@@ -4,13 +4,18 @@
 \alias{get_eta_samples}
 \title{Extract posterior samples of eta (latent coverage) for a specific year}
 \usage{
-get_eta_samples(fit, year_select = 2023)
+get_eta_samples(fit, year_select = 2023, countryyear_select = NULL)
 }
 \arguments{
 \item{fit}{A fitted model object containing \code{samples} (cmdstanr draws),
 \code{geo_unit_index}, \code{time_index}, \code{stan_data}, and \code{data}.}
 
-\item{year_select}{The year for which to extract eta samples. Default is 2023.}
+\item{year_select}{The year for which to extract eta samples. Default is 2023.
+Ignored if \code{countryyear_select} is not NULL.}
+
+\item{countryyear_select}{A tibble with columns \code{iso} and \code{year} specifying
+country-year combinations to extract. If not NULL, takes precedence over
+\code{year_select}. Default is NULL.}
 }
 \value{
 A tibble with columns:
@@ -31,5 +36,9 @@ countries that have both training and test data.
 \dontrun{
 fit <- load_fit("my_model_run")
 eta_2023 <- get_eta_samples(fit, year_select = 2023)
+
+# Extract specific country-year combinations
+cy_select <- tibble::tibble(iso = c("USA", "CAN"), year = c(2023, 2022))
+eta_subset <- get_eta_samples(fit, countryyear_select = cy_select)
 }
 }

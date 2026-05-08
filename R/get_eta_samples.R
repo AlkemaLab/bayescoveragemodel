@@ -7,6 +7,10 @@
 #' @param fit A fitted model object containing `samples` (cmdstanr draws),
 #'   `geo_unit_index`, `time_index`, `stan_data`, and `data`.
 #' @param year_select The year for which to extract eta samples. Default is 2023.
+#'   Ignored if `countryyear_select` is not NULL.
+#' @param countryyear_select A tibble with columns `iso` and `year` specifying
+#'   country-year combinations to extract. If not NULL, takes precedence over
+#'   `year_select`. Default is NULL.
 #'
 #' @return A tibble with columns:
 #'   \describe{
@@ -23,8 +27,12 @@
 #' \dontrun{
 #' fit <- load_fit("my_model_run")
 #' eta_2023 <- get_eta_samples(fit, year_select = 2023)
+#'
+#' # Extract specific country-year combinations
+#' cy_select <- tibble::tibble(iso = c("USA", "CAN"), year = c(2023, 2022))
+#' eta_subset <- get_eta_samples(fit, countryyear_select = cy_select)
 #' }
-get_eta_samples <- function(fit, year_select = 2023) {
+get_eta_samples <- function(fit, year_select = 2023, countryyear_select = NULL) {
 
   if (!"samples" %in% names(fit)) {
     stop("The input 'fit' must contain 'samples'.")
@@ -63,9 +71,22 @@ get_eta_samples <- function(fit, year_select = 2023) {
     dplyr::select(-.chain, -.iteration) %>%
     dplyr::rename(draw = .draw) %>%
     dplyr::left_join(iso_codes, by = "C") %>%
-    dplyr::left_join(year_index, by = "T") %>%
-    dplyr::filter(year == year_select,
-                  iso %in% iso_include) %>%
+    dplyr::left_join(year_index, by = "T")
+
+  # Filter by country-year combinations or year
+  if (!is.null(countryyear_select)) {
+    # countryyear_select takes precedence
+    draws <- draws %>%
+      dplyr::inner_join(countryyear_select, by = c("iso", "year")) %>%
+      dplyr::filter(iso %in% iso_include)
+  } else {
+    # Use year_select
+    draws <- draws %>%
+      dplyr::filter(year == year_select,
+                    iso %in% iso_include)
+  }
+
+  draws <- draws %>%
     dplyr::select(iso, year, eta, draw,
                   dplyr::any_of(c("cluster", "subcluster", "name_region")))
 
