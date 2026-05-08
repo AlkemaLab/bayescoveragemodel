@@ -41,6 +41,7 @@ article.
 ## Setup
 
 ``` r
+
 library(bayescoveragemodel)
 library(dplyr)
 library(ggplot2)
@@ -52,6 +53,7 @@ The package includes example survey data for health coverage indicators
 (ANC4, institutional delivery, vaccination).
 
 ``` r
+
 # Load survey data
 data_folder <- system.file("extdata", package = "bayescoveragemodel")
 
@@ -74,6 +76,7 @@ Use
 to prepare the survey data for model fitting.
 
 ``` r
+
 # Load raw survey data (example using haven for .dta files)
 dat0 <- haven::read_dta(file.path(data_folder, "ICEH_national.dta"))
 
@@ -93,6 +96,7 @@ Before fitting models, explore the survey data using
 [`explore_data()`](https://alkemalab.github.io/bayescoveragemodel/reference/explore_data.md).
 
 ``` r
+
 # Create exploration plots
 plots <- explore_data(
 
@@ -114,6 +118,7 @@ Fit a model using test settings with minimal iterations. This runs
 quickly but should not be used for inference.
 
 ``` r
+
 # Write Stan models (run once)
 write_model()
 
@@ -139,6 +144,7 @@ fit <- fit_model(
 Visualize the fitted estimates.
 
 ``` r
+
 # Plot estimates for all countries
 p <- plot_estimates_local_all(
   results = fit,

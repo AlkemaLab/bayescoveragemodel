@@ -7,7 +7,7 @@ includes countries that have both training and test data.
 ## Usage
 
 ``` r
-get_eta_samples(fit, year_select = 2023)
+get_eta_samples(fit, year_select = 2023, countryyear_select = NULL)
 ```
 
 ## Arguments
@@ -19,7 +19,14 @@ get_eta_samples(fit, year_select = 2023)
 
 - year_select:
 
-  The year for which to extract eta samples. Default is 2023.
+  The year for which to extract eta samples. Default is 2023. Ignored if
+  `countryyear_select` is not NULL.
+
+- countryyear_select:
+
+  A tibble with columns `iso` and `year` specifying country-year
+  combinations to extract. If not NULL, takes precedence over
+  `year_select`. Default is NULL.
 
 ## Value
 
@@ -51,5 +58,9 @@ A tibble with columns:
 if (FALSE) { # \dontrun{
 fit <- load_fit("my_model_run")
 eta_2023 <- get_eta_samples(fit, year_select = 2023)
+
+# Extract specific country-year combinations
+cy_select <- tibble::tibble(iso = c("USA", "CAN"), year = c(2023, 2022))
+eta_subset <- get_eta_samples(fit, countryyear_select = cy_select)
 } # }
 ```

@@ -7,6 +7,7 @@ bayescoveragemodelchecks package.
 ## Setup
 
 ``` r
+
 library(bayescoveragemodel)
 library(dplyr)
 library(ggplot2)
@@ -18,6 +19,7 @@ library(localhierarchy)
 Load previously fitted models for diagnostics:
 
 ``` r
+
 # Choose indicator and model type
 indicator <- "anc4"
 model_name <- "spline"  # or "rw2"
@@ -34,6 +36,7 @@ fit_val <- get_fit(indicator, runstep = "step1ab", folder_suffix = "val_workflow
 Create plots for all countries to visually assess model fit:
 
 ``` r
+
 # Plot estimates from main fit
 plots_main <- plot_estimates_local_all(
   results = fit,
@@ -56,6 +59,7 @@ plots_comparison <- plot_estimates_local_all(
 Check MCMC convergence using standard diagnostics:
 
 ``` r
+
 # Get convergence diagnostics
 diag <- get_convergence_diagnostics(fit)
 print(diag)
@@ -73,6 +77,7 @@ Some model parameters are modeled hierarchically. We can check these
 parameters as follows:
 
 ``` r
+
 # Plot hierarchical checks
 plot_hierchecks(fit)
 ```
@@ -88,6 +93,7 @@ These plots help assess:
 Compare estimates from different model runs (e.g., spline vs RW2):
 
 ``` r
+
 # Load both model types
 fit_spline <- get_fit(indicator, runstep = "step1ab", folder_suffix = "run_spline")
 fit_rw2 <- get_fit(indicator, runstep = "step1ab", folder_suffix = "run_rw2")

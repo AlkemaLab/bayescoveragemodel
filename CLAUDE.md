@@ -17,6 +17,7 @@ Do not read, modify, or reference any files in the `/private` folder.
 ## Development Commands
 
 ``` r
+
 # Load package for development
 devtools::load_all()
 

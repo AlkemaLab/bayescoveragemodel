@@ -8,6 +8,7 @@ country-specific (local) estimation.
 ## Setup
 
 ``` r
+
 library(bayescoveragemodel)
 library(dplyr)
 library(ggplot2)
@@ -19,6 +20,7 @@ library(localhierarchy)
 ## Load and Process Data
 
 ``` r
+
 # Read national survey data and region metadata
 data_folder <- "data_raw"
 dat0 <- read_dta(here::here(data_folder, "ICEH_national.dta"))
@@ -41,6 +43,7 @@ dat <- process_data(
 The primary workflow uses step 1ab to fit the global model:
 
 ``` r
+
 fit1ab <- fit_model(
   runstep = "step1ab",
   survey_df = dat,
@@ -56,6 +59,7 @@ fit1ab <- fit_model(
 Step 1a can be run separately to extract residuals for model checking.
 
 ``` r
+
 fit1a <- fit_model(
   runstep = "step1a",
   survey_df = dat,
@@ -75,6 +79,7 @@ After global fitting, run local models for all countries to obtain final
 estimates:
 
 ``` r
+
 fit_local_global <- fit_model(
   runstep = "local_national",
   y = "invprobit_indicator",
@@ -89,6 +94,7 @@ fit_local_global <- fit_model(
 ## Visualize Results
 
 ``` r
+
 # Plot estimates for all countries
 p <- plot_estimates_local_all(
   results = fit_local_global,
@@ -105,6 +111,7 @@ from the project root. Use
 to load saved fits:
 
 ``` r
+
 # Load a previously saved fit
 fit <- get_fit(
   indicator = "anc4",

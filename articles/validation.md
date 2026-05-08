@@ -6,6 +6,7 @@ the predictive performance of Bayesian transition models.
 ## Setup
 
 ``` r
+
 library(bayescoveragemodel)
 library(dplyr)
 library(ggplot2)
@@ -17,6 +18,7 @@ library(localhierarchy)
 ## Load and Process Data
 
 ``` r
+
 # Read data
 data_folder <- "data_raw"
 dat0 <- read_dta(here::here(data_folder, "ICEH_national.dta"))
@@ -40,6 +42,7 @@ Choose a cutoff year for validation. Data with
 `start_date >= validation_cutoff_year` will be held out for validation.
 
 ``` r
+
 # Set validation cutoff year
 validation_cutoff_year <- 2018
 
@@ -51,6 +54,7 @@ cat("Proportion of data held out:", round(prop_held_out, 3), "\n")
 ## Fit Model with Validation
 
 ``` r
+
 fit_val <- fit_model(
   runstep = "step1ab",
   survey_df = dat,
@@ -67,6 +71,7 @@ fit_val <- fit_model(
 Plot the estimates to see how well the model predicts held-out data:
 
 ``` r
+
 plots_val <- plot_estimates_local_all(
   results = fit_val,
   save_plots = TRUE,
