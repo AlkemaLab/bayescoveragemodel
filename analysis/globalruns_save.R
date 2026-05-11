@@ -4,6 +4,19 @@
 # and regions file
 
 library(tidyverse)
+dir_with_global_fits <- here::here("../bayescoverageanalysis/data_raw/internal/")
+
+# csv file
+regions_all <- read_csv(here::here("data_raw/regions_updated.csv"))
+usethis::use_data(regions_all, overwrite = TRUE)
+
+# routine fit w/o country info
+fit_routine <- readRDS(file.path(dir_with_global_fits ,
+                                  "fit_routine.rds"))
+usethis::use_data(fit_routine, overwrite = TRUE)
+
+
+
 #### indicators
 indicator_alldata <- c("anc4",  "bfexcl0_5" ) # those where data prior to 2010 can be used
 indicator_2010onwards <- c("anc1trimester" ,"vmsl" , "ideliv", "vdpt" , "ancq8" , "cci" , "sba")
@@ -13,7 +26,7 @@ indicator_all <- c(indicator_alldata, indicator_2010onwards)
 # add indicator: data_from2010only (used in fit_model for filtering)
 # save rda, see https://r-pkgs.org/data.html
 
-dir_with_global_fits <- here::here("../bayescoverageanalysis/data_raw/internal/")
+
 for (indicator_select in indicator_all){
   if (indicator_select %in% indicator_alldata){
    global_fit1b <- readRDS(file = file.path(dir_with_global_fits,
@@ -48,6 +61,3 @@ for (f in files){
 # update documentation in R/global_fit_objects.R
 # rebuild package and reinstall the package
 
-# csv file
-regions_all <- read_csv(here::here("data_raw/regions_updated.csv"))
-usethis::use_data(regions_all, overwrite = TRUE)
