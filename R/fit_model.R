@@ -1278,32 +1278,38 @@ fit_model <- function(
   }
 
   ##### Create an output directory for the model ####
-  if (create_runname_and_outputdir & is.null(runname)){
-    run_type <- if(validation_run == TRUE) "val" else "run"
-    # set up directory to store the run
-    runname <- paste0(indicator, "_", runstep, "_", run_type, "_", runnumber,
-                      ifelse(variational, "_variational", ""))
-    output_dir <- get_relative_output_dir(runname)
-    while(dir.exists(output_dir) & runnumber < 100) {
-      print("output directory already exists, increasing runnumber by 1")
-      runnumber <- runnumber + 1
+  save_results <- ifelse(is.null(runname) & runstep %in% c("local_national", "local_subnational"),
+                         FALSE, TRUE)
+  if (save_results){
+    if (create_runname_and_outputdir & is.null(runname)){
+      run_type <- if(validation_run == TRUE) "val" else "run"
+      # set up directory to store the run
       runname <- paste0(indicator, "_", runstep, "_", run_type, "_", runnumber,
                         ifelse(variational, "_variational", ""))
       output_dir <- get_relative_output_dir(runname)
-    }
-    if (runnumber == 100){
-      stop("runnumber is 100, have you really done this run 100 times already?")
-    }
-  } else {
-    if (is.null(rungroup)) {
-      output_dir <- get_relative_output_dir(runname)
+      while(dir.exists(output_dir) & runnumber < 100) {
+        print("output directory already exists, increasing runnumber by 1")
+        runnumber <- runnumber + 1
+        runname <- paste0(indicator, "_", runstep, "_", run_type, "_", runnumber,
+                          ifelse(variational, "_variational", ""))
+        output_dir <- get_relative_output_dir(runname)
+      }
+      if (runnumber == 100){
+        stop("runnumber is 100, have you really done this run 100 times already?")
+      }
     } else {
-      output_dir <- get_relative_output_dir(rungroup, runname)
+      if (is.null(rungroup)) {
+        output_dir <- get_relative_output_dir(runname)
+      } else {
+        output_dir <- get_relative_output_dir(rungroup, runname)
+      }
     }
+    dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+    print(paste("output directory is", output_dir))
+    result$output_dir <- output_dir
+  } else {
+    result$output_dir <- NULL
   }
-  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-  print(paste("output directory is", output_dir))
-  result$output_dir <- output_dir
 
   ##### Fit model ########
   if (!add_sample){
@@ -1346,7 +1352,7 @@ fit_model <- function(
                                         num_threads = nthreads_variational,
                                         max_lbfgs_iters = max_lbfgs_iters, # default is 1000
                                         single_path_draws=50,
-                                        output_dir = output_dir,
+                                        output_dir = results$output_dir,
                                         history_size = 50
     )
     result <- c(result,
@@ -1379,9 +1385,11 @@ fit_model <- function(
       result$posteriors$temporal <- result$posteriors$temporal %>%
           filter(year >= 2010)
     }
-    saveRDS(result, file.path(output_dir, paste0(indicator, "_fit_withpost.rds")))
+    if (save_results)
+      saveRDS(result, file.path(output_dir, paste0(indicator, "_fit_withpost.rds")))
   } else {
-    saveRDS(result, file.path(output_dir, paste0(indicator, "_fit_nopost.rds")))
+    if (save_results)
+      saveRDS(result, file.path(output_dir, paste0(indicator, "_fit_nopost.rds")))
   }
 
 

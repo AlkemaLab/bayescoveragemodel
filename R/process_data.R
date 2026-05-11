@@ -52,10 +52,11 @@ process_data <- function(dat,
   }
 
   print("Minor TO DO: Figure out exact reference years, ie different reference period for anc4.")
-  print("Right now, we delete column year and rename final_year as year, to take forward")
-  dat <- dat %>%
-    dplyr::select(-year) %>%
-    rename(year = final_year)
+  # 2026 data has column year only
+  # print("Right now, we delete column year and rename final_year as year, to take forward")
+  # dat <- dat %>%
+  #   dplyr::select(-year) %>%
+  #   rename(year = final_year)
 
   # check SEs, any missing?
   if (any(is.na(dat$se))){
