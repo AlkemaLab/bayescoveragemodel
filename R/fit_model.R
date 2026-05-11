@@ -1381,9 +1381,15 @@ fit_model <- function(
                                      save_nontemporal  = FALSE)
     # not sure we still want this class
     # attr(result, "class") <- "fpemplus"
+    # filter to 2010 onwards in data and estimates
     if (runstep %in%  c("local_national", "local_subnational")){
-      result$posteriors$temporal <- result$posteriors$temporal %>%
+      result$posteriors$temporal <-
+        result$posteriors$temporal %>%
           filter(year >= 2010)
+      result$data <-
+        result$data %>%
+          filter(year >= 2010)
+
     }
     if (save_results)
       saveRDS(result, file.path(output_dir, paste0(indicator, "_fit_withpost.rds")))
