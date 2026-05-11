@@ -278,6 +278,10 @@ fit_model <- function(
 
   data <- survey_df # for now, just to keep the same name as in fpem
   indicator <- data %>% pull(indic) %>% unique()
+  if (length(indicator) != 1){
+    stop("survey data needs to contain data for just 1 indicator")
+  }
+
 
   add_aggregates <- ifelse(runstep == "local_subnational", TRUE, FALSE)
 
@@ -353,7 +357,7 @@ fit_model <- function(
       #   here::here("data_raw/internal/"), indicator, "_summary",
       #   globalstepname,
       #   ".rds"))
-      global_fit <- get(paste0(indicator, "_summary", globalstepname))
+      global_fit <- get(paste0("globalfit", globalstepname, "_", indicator))
     }
 
     print("We use a global fit, and take selected settings from there.")
@@ -464,6 +468,16 @@ fit_model <- function(
       print(paste("We only use data for", iso_select))
       data <- data %>%
         filter(iso %in% iso_select)
+    }
+  }
+
+  if (runstep %in% c("local_national", "local_subnational")){
+    # for some indicators, do fitting just from 2010 onwards
+    if (global_fit$data_from2010only){
+      print("We fit to survey data from 2010 onwards.")
+      data <-
+        data %>%
+        filter(year >= 2010)
     }
   }
 
