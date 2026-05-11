@@ -20,3 +20,4 @@ vector with mean log sigma
 \description{
 Routine data mean uncertainty
 }
+\keyword{internal}

@@ -14,3 +14,4 @@ fit_routine
 Fitted brm object with information on routine sigmas.
 }
 \keyword{datasets}
+\keyword{internal}

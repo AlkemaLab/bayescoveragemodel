@@ -12,4 +12,5 @@
 #' @keywords datasets
 #' @name regions_all
 #' @docType data
+#' @keywords internal
 "regions_all"

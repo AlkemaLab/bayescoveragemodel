@@ -20,3 +20,4 @@ regions_all
 Dataset with meta information on countries and their regional groupings.
 }
 \keyword{datasets}
+\keyword{internal}

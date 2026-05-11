@@ -6,4 +6,5 @@
 #' @keywords datasets
 #' @name fit_routine
 #' @docType data
+#' @keywords internal
 "fit_routine"

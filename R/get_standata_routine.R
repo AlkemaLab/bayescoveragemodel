@@ -54,7 +54,7 @@ get_standata_routine <- function(service_statistic_df, # filtered to pop (eg cou
 #' worst of start and end year for annual change
 #'
 #' @returns vector with mean log sigma
-#' @export
+#' @keywords internal
 #'
 get_logsigma_mean <- function(fit_routineglobal,
                               indicator,
