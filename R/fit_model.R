@@ -278,6 +278,10 @@ fit_model <- function(
 
   data <- survey_df # for now, just to keep the same name as in fpem
   indicator <- data %>% pull(indic) %>% unique()
+  if (length(indicator) != 1){
+    stop("survey data needs to contain data for just 1 indicator")
+  }
+
 
   add_aggregates <- ifelse(runstep == "local_subnational", TRUE, FALSE)
 
@@ -353,7 +357,7 @@ fit_model <- function(
       #   here::here("data_raw/internal/"), indicator, "_summary",
       #   globalstepname,
       #   ".rds"))
-      global_fit <- get(paste0(indicator, "_summary", globalstepname))
+      global_fit <- get(paste0("globalfit", globalstepname, "_", indicator))
     }
 
     print("We use a global fit, and take selected settings from there.")
@@ -464,6 +468,16 @@ fit_model <- function(
       print(paste("We only use data for", iso_select))
       data <- data %>%
         filter(iso %in% iso_select)
+    }
+  }
+
+  if (runstep %in% c("local_national", "local_subnational")){
+    # for some indicators, do fitting just from 2010 onwards
+    if (global_fit$data_from2010only){
+      print("We fit to survey data from 2010 onwards.")
+      data <-
+        data %>%
+        filter(year >= 2010)
     }
   }
 
@@ -1091,11 +1105,38 @@ fit_model <- function(
     dat_routine <- NULL
     routine_list <- NULL
   } else {
+     # to do 2026/5/11: simplify
+    if (!requireNamespace("brms", quietly = TRUE)) {
+      stop("Package 'brms' is required for this plot. Please install it.", call. = FALSE)
+    }
     #hyper_param <- readRDS(here::here("data_raw/internal/", paste0("routine_hyperparameters_", indicator, ".rds")))
-    hyper_param <- get(paste0("routine_hyperparameters_", indicator))
+    #hyper_param <- get(paste0("routine_hyperparameters_", indicator))
+
+    # step 1: add log_sigma_mean_routine_roc to the service_stats_df
+    # fit_routine is internal data
+    routine_data$log_sigma_mean_routine_roc <-
+      get_logsigma_mean(fit_routineglobal = fit_routine,
+                        indicator = routine_data$indicator_name,
+                        worst_combi = routine_data$worst_combi
+      )
+    # used to have mean_log_sigma, hierarchical_sigma
+    # now just hierarchuical sigma is used
+    vc <- brms::VarCorr(fit_routine)
+    sd_country <- vc$country$sd[, "Estimate"]
+    names(sd_country) <-  gsub("sigma_indicator_name", "", rownames(vc$country$sd))
+    #sd_country
+    routine_hyperparameters <- tibble(
+      mean_log_sigma = 0,
+      hierarchical_sigma = sd_country[routine_data$indicator_name[1]]
+    )
+    # print(routine_hyperparameters)
+    # assign(paste0("routine_hyperparameters_", indicator_select),
+    #        routine_hyperparameters,
+    #        envir = .GlobalEnv)
+
     combined_list <- get_standata_routine(
                           service_statistic_df = routine_data,
-                          hyper_param = hyper_param,
+                          hyper_param = routine_hyperparameters,
                           time_index = time_index,
                           geo_unit_index = geo_unit_index %>%
                             dplyr::select(any_of(c("iso", "admin1", "c")))
@@ -1105,6 +1146,8 @@ fit_model <- function(
       if (!is.null(mean_log_sigma)){
         routine_list$mean_log_sigma <- mean_log_sigma
       }
+
+
   }
 
 

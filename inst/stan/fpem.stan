@@ -147,9 +147,9 @@ data {
   int<lower=0, upper=1> fix_subnat_corr;
   array[fix_subnat_corr ? 1 : 0]  real<lower=0, upper = 1> rho_correlationeps_fixed;
 
+   
 
-
-
+   
 
 }
 
@@ -216,7 +216,7 @@ parameters {
   // for subnational
   array[fix_subnat_corr ? 0 : 1] real<lower=0, upper = 1> rho_correlationeps_estimate;   // for correlated eps
 
-
+   
 
 }
 
@@ -308,6 +308,7 @@ transformed parameters {
       }
     }
   // } else {
+  //   // TO DO: finish
   //   for(i in 1:n_agg_units) {
   //     for(t in 1:T) {
   //       eta_agg[i, t] = sum(eta[, t] .* to_vector(geo_unit_pop_wt[i, , t]));
@@ -392,7 +393,7 @@ model {
   }
 
 
-
+     
 
 }
 

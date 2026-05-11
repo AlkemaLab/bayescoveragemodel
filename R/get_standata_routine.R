@@ -12,7 +12,7 @@
 #'
 get_standata_routine <- function(service_statistic_df, # filtered to pop (eg country)
                                  hyper_param,
-                                           time_index, geo_unit_index
+                                 time_index, geo_unit_index
 ){
   dat_routine <-
     service_statistic_df %>%
@@ -34,14 +34,39 @@ get_standata_routine <- function(service_statistic_df, # filtered to pop (eg cou
 
     dat_model <- dat_routine %>%
       filter(!is.na(routine_roc))  %>% # we don't filter yet for dat_routine as we do want start years in the plot
-      dplyr::select(routine_roc, sd2_routine_roc,  c_routine_j, t_routine_j)
+      dplyr::select(routine_roc, sd2_routine_roc,  c_routine_j, t_routine_j, log_sigma_mean_routine_roc)
 
     routine_list <- c(list(N_routine = dim(dat_model)[1]),
-                  as.list(dat_model),
-                  list(mean_log_sigma = c(hyper_param$mean_log_sigma),
-                        hierarchical_sigma = c(hyper_param$hierarchical_sigma)))
-  #                as.list(hyper_param))
+                      as.list(dat_model),
+                      list(mean_log_sigma = c(hyper_param$mean_log_sigma),
+                           hierarchical_sigma = c(hyper_param$hierarchical_sigma)))
+    #                as.list(hyper_param))
   }
 
   return(list(dat_routine = dat_routine, routine_list = routine_list))
+}
+
+#' Routine data mean uncertainty
+#'
+#' @param fit_routineglobal brms fit for error variance routine data
+#' @param indicator name indicator
+#' @param worst_combi vector with value of data quality indicator,
+#' worst of start and end year for annual change
+#'
+#' @returns vector with mean log sigma
+#' @export
+#'
+get_logsigma_mean <- function(fit_routineglobal,
+                              indicator,
+                              worst_combi){
+  log(fitted(fit_routineglobal,
+             newdata =
+               tibble(
+                 indicator_name = indicator,
+                 worst_combi = worst_combi,
+                 country = NA),
+             dpar = "sigma",
+             #             re_formula = ~ 0)[, "Estimate"]
+             re_formula = ~ (1|indicator_name))[, "Estimate"]
+  )
 }

@@ -147,14 +147,15 @@ data {
   int<lower=0, upper=1> fix_subnat_corr;
   array[fix_subnat_corr ? 1 : 0]  real<lower=0, upper = 1> rho_correlationeps_fixed;
 
+   
 
-
-  // routines
+    // routines
   int N_routine;
   real mean_log_sigma; // mean for roc
   real<lower = 0>  hierarchical_sigma; // sd for roc
   vector[N_routine] routine_roc; // observed delta routine
-  vector<lower = 0>[N_routine]  sd2_routine_roc; //sd^2 of observed delta routine
+  //vector<lower = 0>[N_routine]  sd2_routine_roc; //sd^2 of observed delta routine
+  vector[N_routine] log_sigma_mean_routine_roc; //expected log sigma
   array[N_routine] int c_routine_j; // geo unit index
   array[N_routine] int t_routine_j; // year index
 
@@ -224,7 +225,7 @@ parameters {
   // for subnational
   array[fix_subnat_corr ? 0 : 1] real<lower=0, upper = 1> rho_correlationeps_estimate;   // for correlated eps
 
-  // routine
+    // routine
   vector[n_geounit]  log_sigma_delta;
 
 
@@ -403,18 +404,27 @@ model {
   }
 
 
-      // routine data model
+    // // routine data model
+  // if (N_routine > 0) {
+  //  log_sigma_delta ~ normal(mean_log_sigma, hierarchical_sigma); // one term per geounit
+  //  for (j in 1:N_routine){
+  //     real roc_routine_totalsd_j = sqrt(sd2_routine_roc[j] + exp(log_sigma_delta[c_routine_j[j]])^2);
+  //     real eta_jt = inv_tr_eta(tr_eta_obs[c_routine_j[j], t_routine_j[j]]);
+  //     real eta_jtmin1 = inv_tr_eta(tr_eta_obs[c_routine_j[j], t_routine_j[j]-1]);
+  //     routine_roc[j] ~ normal(eta_jt - eta_jtmin1, roc_routine_totalsd_j);
+  //  }
+  // }
+ // routine data model UPDATED
   if (N_routine > 0) {
-   log_sigma_delta ~ normal(mean_log_sigma, hierarchical_sigma); // one term per geounit
+   log_sigma_delta ~ normal(0, hierarchical_sigma); // one term per geounit
    for (j in 1:N_routine){
-      real roc_routine_totalsd_j = sqrt(sd2_routine_roc[j] + exp(log_sigma_delta[c_routine_j[j]])^2);
+      real roc_routine_totalsd_j = exp(log_sigma_mean_routine_roc[j] +
+                                        log_sigma_delta[c_routine_j[j]]);
       real eta_jt = inv_tr_eta(tr_eta_obs[c_routine_j[j], t_routine_j[j]]);
       real eta_jtmin1 = inv_tr_eta(tr_eta_obs[c_routine_j[j], t_routine_j[j]-1]);
       routine_roc[j] ~ normal(eta_jt - eta_jtmin1, roc_routine_totalsd_j);
    }
   }
-
-
 
 
 }
