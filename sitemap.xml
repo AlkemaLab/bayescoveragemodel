@@ -15,10 +15,12 @@
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/compare_fits.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/explore_data.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/fit_model.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/fit_routine.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_convergence_diagnostics.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_eta_samples.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_fit.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_inno_samples.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_logsigma_mean.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_output_dir.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_relative_output_dir.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_residuals_samples.html</loc></url>
@@ -26,6 +28,15 @@
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_se_logitprop.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_se_probitofinvprobitprop.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_standata_routine.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_anc1trimester.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_anc4.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_ancq8.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_bfexcl0_5.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_cci.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_ideliv.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_sba.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_vdpt.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_vmsl.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/identify_outliers_in_global_fit.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/index.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/inv_probit.html</loc></url>
@@ -37,6 +48,7 @@
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/plot_hierchecks.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/probit.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/process_data.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/regions_all.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/rename_output_folder.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/write_model.html</loc></url>
 </urlset>
