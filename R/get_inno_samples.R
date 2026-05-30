@@ -71,8 +71,8 @@ get_inno_samples <- function(fit) {
     dplyr::rename(T = t)
 
   # Extract both epsilon_innovation and eta in a single call (much faster)
-  draws <- fit$samples$draws(c("epsilon_innovation",
-                               "epsilon", "eta")) %>%
+  draws <- extract_draws(fit, c("epsilon_innovation",
+                                "epsilon", "eta")) %>%
     tidybayes::spread_draws(epsilon_innovation[C, T], epsilon[C, T],
                             eta[C, T]) %>%
     dplyr::ungroup() %>%

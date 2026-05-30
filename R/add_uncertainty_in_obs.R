@@ -11,13 +11,15 @@
 #' @keywords internal
 add_uncertainty_in_obs <- function(fit, perc_low = 0.025, perc_up = 0.975){
 
-  yhat_i <- fit$samples$draws("eta_i") %>%
+  draws_obj <- extract_draws(fit, "eta_i")
+
+  yhat_i <- draws_obj %>%
     tidybayes::spread_draws(eta_i[i]) %>%
     group_by(i) %>%
     summarise(mean_yhat = mean(eta_i[i])) %>%
     pull(mean_yhat)
 
-  scale_i <- fit$samples$draws("scale") %>%
+  scale_i <- extract_draws(fit, "scale") %>%
     tidybayes::spread_draws(scale[i]) %>%
     group_by(i) %>%
     summarise(mean_scale = mean(scale[i])) %>%

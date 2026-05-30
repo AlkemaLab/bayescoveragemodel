@@ -33,6 +33,8 @@ Imports:
     tidyr
 Suggests:
     cmdstanr,
+    rstan,
+    posterior,
     bayesplot,
     haven,
     here,

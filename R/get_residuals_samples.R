@@ -69,7 +69,7 @@ get_residuals_samples <- function(fit) {
 
   # Extract draws - include y_sim for validation runs
   params <- if (is_validation) c("eta_i", "scale", "y_sim") else c("eta_i", "scale")
-  draws <- fit$samples$draws(params)
+  draws <- extract_draws(fit, params)
 
   if (is_validation) {
     draws <- draws %>%

@@ -55,7 +55,9 @@ init_fun <- function(chain_id, stan_data){
 
                    global_shrinkage_dm_estimate = abs(rnorm(1, 0, 0.01)),
 
-                   caux_dm_estimate = 1 + abs(rnorm(1, 0, 0.25))
+                   # Note: Stan parameter is sqrt_caux_dm_estimate (not caux_dm_estimate)
+                   # Prior is half-normal(0, 1), so initialize near 1
+                   sqrt_caux_dm_estimate = abs(rnorm(1, 0, 0.5))
 
                  ))
     }
@@ -133,4 +135,84 @@ init_fun <- function(chain_id, stan_data){
                ))
   }
   return(inits)
+}
+
+#' Fix initialization dimensions for rstan backend
+#'
+#' RStan (using older Stan 2.21) requires explicit array dimensions, while
+#' cmdstanr (using newer Stan 2.35+) is more flexible. This function ensures
+#' that all vector parameters in the initialization have proper dimensions
+#' for rstan compatibility.
+#'
+#' The function uses a systematic approach to classify parameters:
+#' - Known scalars (single values that should stay as scalars)
+#' - Known matrices (2D arrays)
+#' - Everything else is treated as a vector and gets explicit dimensions
+#'
+#' @param init_list List returned by init_fun
+#' @param backend Character string: "cmdstanr" or "rstan"
+#'
+#' @return Modified init_list with proper dimensions for rstan
+#' @keywords internal
+fix_init_dims_for_rstan <- function(init_list, backend = "cmdstanr") {
+  if (backend != "rstan") {
+    return(init_list)
+  }
+
+  # Parameters that should remain as scalars (no dimension attribute)
+  # IMPORTANT: There are NO true scalars in the Stan model!
+  # All parameters that look like scalars are actually array[1] in Stan:
+  # - rho_estimate, tau_estimate: array[smoothing * (1 - fix_smoothing)]
+  # - global_shrinkage_dm_estimate, caux_dm_estimate: array[add_dataoutliers * (1-fix_nonse)]
+  # - rho_correlationeps_estimate: array[fix_subnat_corr ? 0 : 1]
+  # Therefore, this list should remain EMPTY - all are treated as vectors
+  known_scalars <- c()
+
+  # Parameters that are matrices (already have 2D structure)
+  known_matrices <- c(
+    "Betas_raw_estimate",
+    "epsilon_innovation"
+  )
+
+  # Process each parameter in the init list
+  for (param_name in names(init_list)) {
+    val <- init_list[[param_name]]
+
+    if (is.null(val) || length(val) == 0) {
+      next  # Skip NULL or empty values
+    }
+
+    # Handle known scalars - ensure they have NO dimensions
+    if (param_name %in% known_scalars) {
+      if (length(val) != 1) {
+        warning(sprintf("Expected scalar for %s but got length %d", param_name, length(val)))
+      }
+      dim(init_list[[param_name]]) <- NULL
+      next
+    }
+
+    # Handle known matrices - verify they have proper 2D structure
+    if (param_name %in% known_matrices) {
+      if (!is.matrix(val)) {
+        warning(sprintf("%s should be a matrix but isn't - attempting to fix", param_name))
+        # Try to convert to matrix (may need additional logic based on expected dimensions)
+        dim(init_list[[param_name]]) <- c(length(val), 1)
+      }
+      # If already a matrix, leave as is (dimensions already set)
+      next
+    }
+
+    # All other parameters are assumed to be vectors/arrays
+    # This includes:
+    # - All *_estimate variables (Ptilde_sigma_estimate_reverse, Omega_raw_estimate, etc.)
+    # - All *_sigma_estimate_reverse_* variables (Betas_sigma_estimate_reverse_1, etc.)
+    # - Vector parameters (nonse_estimate, local_shrinkage_dm, etc.)
+    if (!is.matrix(val)) {
+      # Set explicit dimension for vectors
+      # This is critical for rstan which distinguishes between scalar and vector[1]
+      dim(init_list[[param_name]]) <- length(val)
+    }
+  }
+
+  return(init_list)
 }

@@ -36,7 +36,7 @@ get_convergence_diagnostics <- function(fit, model_name = "spline"){
     parnames <- c(parnames, "global_shrinkage_dm_estimate", "sqrt_caux_dm_estimate")
   }
   # add ar parameters
-  summ <- fit$samples$summary(parnames) %>%
+  summ <- extract_summary(fit, parnames) %>%
     arrange(desc(rhat))
   write_csv(summ, file = file.path(fit$output_dir, "diagnostics.csv"))
 
@@ -66,7 +66,7 @@ get_convergence_diagnostics <- function(fit, model_name = "spline"){
   pdf(plot_dirandnameb, width = 11, height = 11)
   for (i in 1:length(parnames)){
     parname <- parnames[i]
-    samp <- fit$samples$draws(parname )
+    samp <- extract_draws(fit, parname)
     # can produce trace plots too
     #mcmc_trace(samp)
     p <- mcmc_dens_overlay(samp)

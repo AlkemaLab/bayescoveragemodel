@@ -22,7 +22,8 @@ process_fit <- function(fit, parallel_chains = NULL,
         temporal_variables <- c("eta")
 
     }
-    temporal <- fit$samples$summary(
+    temporal <- extract_summary(
+      fit,
       temporal_variables,
       ~ stats::quantile(.x, probs = c(0.025, 0.1, 0.25, 0.5, 0.75, 0.9, 0.975)),
       .cores = parallel_chains) %>%
@@ -39,7 +40,8 @@ process_fit <- function(fit, parallel_chains = NULL,
   } # end temporal
 
   if (add_aggregates){
-    temporal_agg <- fit$samples$summary(
+    temporal_agg <- extract_summary(
+      fit,
       "aggr",
       ~ stats::quantile(.x, probs = c(0.025, 0.1, 0.25, 0.5, 0.75, 0.9, 0.975)),
       .cores = parallel_chains) %>%
@@ -94,7 +96,7 @@ process_fit <- function(fit, parallel_chains = NULL,
 
     ar <- NULL
     if(fit$stan_data$smoothing == 1) {
-      ar <- fit$samples$draws(c("rho", "tau")) %>%
+      ar <- extract_draws(fit, c("rho", "tau")) %>%
         tidybayes::spread_draws(rho[i], tau[i]) %>%
         ungroup() %>%
         dplyr::select(-.data$i)
@@ -103,17 +105,17 @@ process_fit <- function(fit, parallel_chains = NULL,
     #
     # Hierarchical distributions
     #
-    Ptilde_sigma <- fit$samples$draws(c("Ptilde_sigma")) %>%
+    Ptilde_sigma <- extract_draws(fit, c("Ptilde_sigma")) %>%
       tidybayes::spread_draws(Ptilde_sigma[i])
-    Omega_sigma <- fit$samples$draws(c("Omega_sigma")) %>%
+    Omega_sigma <- extract_draws(fit, c("Omega_sigma")) %>%
       tidybayes::spread_draws(Omega_sigma[i])
-    a_sigma <- fit$samples$draws(c("a_sigma")) %>%
+    a_sigma <- extract_draws(fit, c("a_sigma")) %>%
       tidybayes::spread_draws(a_sigma[i, j])
 
     #
     # Data model
     #
-    nonse <- fit$samples$draws("nonse") %>%
+    nonse <- extract_draws(fit, "nonse") %>%
       tidybayes::spread_draws(nonse[source]) %>%
       dplyr::left_join(fit$source_index, by = "source")
 
@@ -133,14 +135,14 @@ process_fit <- function(fit, parallel_chains = NULL,
     #
     # Generated quantities
     #
-    generated_quantities <- fit$samples$draws(c("pit", "resid", "y_pred")) %>%
+    generated_quantities <- extract_draws(fit, c("pit", "resid", "y_pred")) %>%
       tidybayes::spread_draws(pit[i], resid[i], y_pred[i])
     ans <- c(ans,
              list(
                generated_quantities = generated_quantities
              ))
     if (!just_one_indicator ){
-      d_generated_quantities <- fit$samples$draws(c("d_pit", "d_resid", "d_y_pred")) %>%
+      d_generated_quantities <- extract_draws(fit, c("d_pit", "d_resid", "d_y_pred")) %>%
         tidybayes::spread_draws(d_pit[i], d_resid[i], d_y_pred[i]) %>%
         rename(pit = d_pit, resid = d_resid, y_pred = d_y_pred)
       ans <- c(ans,
@@ -176,7 +178,7 @@ extract_rate_vs_level_subhierarchical <- function(fit, f, subhierarchy, constrai
 
   num_constrained_zero <- fit$stan_data$spline_degree + 1
 
-  a_star <- fit$samples$draws(c("a_star")) %>%
+  a_star <- extract_draws(fit, c("a_star")) %>%
       tidybayes::spread_draws(a_star[j, i])
 
   a_star <- a_star %>%

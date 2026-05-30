@@ -4,7 +4,7 @@
 #' model object for a specified year. For validation runs, only includes
 #' countries that have both training and test data.
 #'
-#' @param fit A fitted model object containing `samples` (cmdstanr draws),
+#' @param fit A fitted model object containing `samples` (cmdstanr or rstan fit object),
 #'   `geo_unit_index`, `time_index`, `stan_data`, and `data`.
 #' @param year_select The year for which to extract eta samples. Default is 2023.
 #'   Ignored if `countryyear_select` is not NULL.
@@ -65,7 +65,7 @@ get_eta_samples <- function(fit, year_select = 2023, countryyear_select = NULL) 
 
   # Extract draws
   params <- c("eta")
-  draws <- fit$samples$draws(params) %>%
+  draws <- extract_draws(fit, params) %>%
     tidybayes::spread_draws(eta[C, T]) %>%
     dplyr::ungroup() %>%
     dplyr::select(-.chain, -.iteration) %>%

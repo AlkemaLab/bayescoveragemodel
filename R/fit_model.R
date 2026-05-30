@@ -56,6 +56,11 @@
 #'
 #' @param generate_quantities binary vector indicating whether to simulate data from the fitted model
 #' @param stan_file_path stan file path (if NULL, uses internal stan file)
+#' @param backend character string specifying the Stan backend to use. Options are:
+#'   \itemize{
+#'     \item \code{"cmdstanr"} (default): Use cmdstanr interface (recommended, modern)
+#'     \item \code{"rstan"}: Use rstan interface (legacy, may be required for some workflows)
+#'   }
 #'
 #' Setting for where to save things
 #' @param create_runname_and_outputdir boolean indicator of whether to create a runname and output directory
@@ -237,13 +242,16 @@ fit_model <- function(
   validation_cutoff_year = NULL, # if not NULL, should be a year and is used to define/overwrite held_out set
   validation_run = FALSE,
 
-  save_post_summ = FALSE, # added to be able to save results in a local_national run
+  save_post_summ = TRUE, # added to be able to NOT save results in a step1a etc run
+
   # Model checks
   generate_quantities = TRUE,
   # misc
   get_posteriors = TRUE,
 
   stan_file_path = NULL,
+  # backend selection
+  backend = c("cmdstanr", "rstan"),
   # outputdir
   ## note: this is automated, consider updating default
   create_runname_and_outputdir = TRUE,
@@ -275,6 +283,9 @@ fit_model <- function(
   # ...
 
 ) {
+
+  # Match backend argument
+  backend <- match.arg(backend)
 
   data <- survey_df # for now, just to keep the same name as in fpem
   indicator <- data %>% pull(indic) %>% unique()
@@ -900,6 +911,8 @@ fit_model <- function(
     hier_stan_data <- purrr::list_flatten(hier_stan_data, name_spec = "{inner}")
  # }
 
+
+
   # if there are maxes for a sigma, update to get max for that sigma
   if (!is.null(global_fit)){
     # to do: decide whether to use
@@ -1152,6 +1165,7 @@ fit_model <- function(
 
 
 
+
   #### reading and loading stan model
   if (is.null(stan_file_path)){
     stanmodelname <- case_when(
@@ -1200,12 +1214,14 @@ fit_model <- function(
     stop(paste0("Could not find Stan file: ", stanmodelname, ".stan\n",
                 "Searched path: ", stan_file_path))
   }
+  print(paste("Using Stan file at:", stan_file_path))
 
   if (compile_model){
     stan_model <- compile_model(variational = variational,
                                 nthreads_variational = nthreads_variational,
                                 force_recompile = force_recompile,
-                                stan_file_path = stan_file_path )
+                                stan_file_path = stan_file_path,
+                                backend = backend)
   }
 
 
@@ -1223,9 +1239,103 @@ fit_model <- function(
                  Ptilde_low = Ptilde_low,
                  smoothing_data,
                  nonse_data)
+
+  # Backend-specific fix: rstan (using older Stan 2.21) requires arrays
+  # to have explicit structure and dimension consistency, while cmdstanr (Stan 2.35+)
+  # is more flexible with numeric(0) and automatic type inference
+  if (backend == "rstan") {
+    # Fix matrix variables (Betas is a matrix with k columns)
+    # Matrix dimension must match: nrow = n_terms_fixed, ncol = k
+    if ("Betas_raw_n_terms_fixed" %in% names(stan_data)) {
+      n_terms <- stan_data$Betas_raw_n_terms_fixed
+      if ("Betas_raw_fixed" %in% names(stan_data)) {
+        if (n_terms == 0 || length(stan_data$Betas_raw_fixed) == 0) {
+          stan_data$Betas_raw_fixed <- matrix(numeric(0),
+                                                   nrow = 0,
+                                                   ncol = stan_spline_data$k)
+        } else if (!is.matrix(stan_data$Betas_raw_fixed)) {
+          # Ensure it's a matrix even if only one row
+          stan_data$Betas_raw_fixed <- as.matrix(stan_data$Betas_raw_fixed)
+        }
+      }
+    }
+
+    if ("Betas_n_sigma_fixed" %in% names(stan_data)) {
+      n_sigma <- stan_data$Betas_n_sigma_fixed
+      if ("Betas_sigma_fixed" %in% names(stan_data)) {
+        if (n_sigma == 0 || length(stan_data$Betas_sigma_fixed) == 0) {
+          stan_data$Betas_sigma_fixed <- matrix(numeric(0),
+                                                     nrow = 0,
+                                                     ncol = stan_spline_data$k)
+        } else if (!is.matrix(stan_data$Betas_sigma_fixed)) {
+          stan_data$Betas_sigma_fixed <- as.matrix(stan_data$Betas_sigma_fixed)
+        }
+      }
+    }
+
+    # fix rstan dimensions here
+    # for all in stan_data
+
+    # Fix vector variables (Ptilde, Omega, gamma are vectors)
+    # Vector length must match the corresponding n_terms_fixed or n_sigma_fixed
+    vector_pairs <- list(
+      list(count = "Ptilde_raw_n_terms_fixed", var = "Ptilde_raw_fixed"),
+      list(count = "Ptilde_n_sigma_fixed", var = "Ptilde_sigma_fixed"),
+      list(count = "Omega_raw_n_terms_fixed", var = "Omega_raw_fixed"),
+      list(count = "Omega_n_sigma_fixed", var = "Omega_sigma_fixed"),
+      list(count = "gamma_raw_n_terms_fixed", var = "gamma_raw_fixed"),
+      list(count = "gamma_n_sigma_fixed", var = "gamma_sigma_fixed"),
+      # not in hier data...
+      list(count = "fix_smoothing", var = "rho_fixed"),
+      list(count = "fix_smoothing", var = "tau_fixed"),
+      #array[fix_nonse ? 1 : 0] real<lower=0> sdbias_fixed;
+      list(count = "fix_nonse", var = "sdbias_fixed")#,
+      # need exceptions
+      # array[fix_nonse ? S : 0] real<lower=0> nonse_fixed;
+      # list(count = "fix_nonse", var = "nonse_fixed"),
+      #array[add_dataoutliers*fix_nonse ? 1 : 0] real<lower=0> global_shrinkage_dm_fixed;
+      #array[add_dataoutliers*fix_nonse ? 1 : 0] real<lower=0> caux_dm_fixed;
+
+
+    )
+    for (pair in vector_pairs) {
+      count_var <- pair$count
+      data_var <- pair$var
+#      print(pair)
+#      print(count_var)
+
+      if (count_var %in% names(stan_data) && data_var %in% names(stan_data)) {
+        expected_length <- stan_data[[count_var]]
+        actual_data <- stan_data[[data_var]]
+   #     print( stan_data[[count_var]])
+  #      print(stan_data[[data_var]])
+
+        # Case 1: Expected length is 0
+        if (expected_length == 0) {
+          stan_data[[data_var]] <- double(0)
+        }
+        # Case 2: Expected length > 0 but actual data is empty
+        else if (length(actual_data) == 0) {
+          stop("Expected non-empty data for ", data_var, " but got empty. Check the global fit and fixed parameters.")
+        }
+        # Case 3: Ensure proper vector type (convert scalar to vector if needed)
+        else {
+          # This is critical for rstan which distinguishes between scalar and vector[1]
+          # can't use expected lenght for nonse_fixed
+          #  if (data_var != "nonse_fixed"){
+          dim(stan_data[[data_var]]) <- expected_length
+          #  } else {
+
+          #   }
+        }
+      }
+    }
+  }
+
   # pass back to user
   result <- list(
     runstep = runstep,
+    backend = backend,  # store backend for wrapper functions
     record_id_fixed_used = data$record_id_fixed, # used to define outliers from 1a, to use in 1b
     # relabeled original data to avoid confusion
     original_data = original_data,
@@ -1278,8 +1388,13 @@ fit_model <- function(
   }
 
   ##### Create an output directory for the model ####
-  save_results <- ifelse(is.null(runname) & runstep %in% c("local_national", "local_subnational"),
-                         FALSE, TRUE)
+  # Determine if we should save results:
+  # Save if: (1) runname is provided, OR
+  #          (2) create_runname_and_outputdir=TRUE AND not a local run
+  # This ensures we only save when we have a valid way to create output_dir
+  save_results <- !is.null(runname) |
+                  (create_runname_and_outputdir & !runstep %in% c("local_national", "local_subnational"))
+
   if (save_results){
     if (create_runname_and_outputdir & is.null(runname)){
       run_type <- if(validation_run == TRUE) "val" else "run"
@@ -1317,30 +1432,57 @@ fit_model <- function(
   }
   if (!variational){
     if (add_inits){
-      init_ll <- lapply(1:chains, function(id) init_fun(chain_id = id, stan_data))
+      init_ll <- lapply(1:chains, function(id) {
+        inits <- init_fun(chain_id = id, stan_data)
+        # Fix initialization dimensions for rstan backend
+        fix_init_dims_for_rstan(inits, backend = backend)
+      })
     } else {
       init_ll <- NULL
     }
-    # can try this too
-    #init = function(chain_id) init_fun(chain_id = chain_id, fit$stan_data),
- # return(stan_data)
-    fit <- stan_model$sample(
-      stan_data,
-      save_latent_dynamics = TRUE,
-      init = init_ll,
-      chains = chains,
-      parallel_chains  = chains,
-      iter_sampling = iter_sampling,
-      iter_warmup = iter_warmup,
-      seed = seed,
-      refresh = refresh,
-      adapt_delta = adapt_delta,
-      max_treedepth = max_treedepth,
-      save_cmdstan_config = TRUE
-    )
 
-    result <- c(result,
-                samples = fit)
+    # Backend-specific sampling
+    if (backend == "cmdstanr") {
+      # cmdstanr sampling
+      fit <- stan_model$sample(
+        stan_data,
+        save_latent_dynamics = TRUE,
+        init = init_ll,
+        chains = chains,
+        parallel_chains  = chains,
+        iter_sampling = iter_sampling,
+        iter_warmup = iter_warmup,
+        seed = seed,
+        refresh = refresh,
+        adapt_delta = adapt_delta,
+        max_treedepth = max_treedepth,
+        save_cmdstan_config = TRUE
+      )
+
+    } else if (backend == "rstan") {
+      # rstan sampling
+      fit <- rstan::sampling(
+        object = stan_model,
+        data = stan_data,
+        init = init_ll,
+        chains = chains,
+        cores = chains,  # parallel chains
+        iter = iter_sampling + iter_warmup,
+        warmup = iter_warmup,
+        seed = seed,
+        # for testing
+        verbose = TRUE,
+        refresh = refresh,
+        control = list(adapt_delta = adapt_delta,
+                       max_treedepth = max_treedepth)
+      )
+
+    } else {
+      stop("Unknown backend: ", backend)
+    }
+
+    # Store the samples - use list() to ensure proper structure
+    result$samples <- fit
   } else {
     # variational
     # no longer tested
@@ -1355,8 +1497,8 @@ fit_model <- function(
                                         output_dir = results$output_dir,
                                         history_size = 50
     )
-    result <- c(result,
-                samples = fit_pf)
+    # Store the samples - use list assignment to ensure proper structure
+    result$samples <- fit_pf
   }
 
   result$data <- add_uncertainty_in_obs(result)
@@ -1399,7 +1541,7 @@ fit_model <- function(
   }
 
 
-  if (runstep %in% c("step1a", "step1ab", "step1b", "global_subnational") | save_post_summ){
+  if (runstep %in% c("step1a", "step1ab", "step1b", "global_subnational") & save_post_summ){
     result$post_summ <- get_posterior_summaries_andfindpar(result)
     # we may not need this extra saving
     saveRDS(result, file.path(output_dir, paste0(indicator, "_fit_wpostsumm.rds")))
