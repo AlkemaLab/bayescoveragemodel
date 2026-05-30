@@ -42,6 +42,7 @@ fit_model(
   generate_quantities = TRUE,
   get_posteriors = TRUE,
   stan_file_path = NULL,
+  stan_model = NULL,
   backend = c("cmdstanr", "rstan"),
   create_runname_and_outputdir = TRUE,
   runnumber = 1,
@@ -134,6 +135,9 @@ asymptote (see Details).}
 \item{get_posteriors}{boolean indicator of whether to return posterior samples}
 
 \item{stan_file_path}{stan file path (if NULL, uses internal stan file)}
+
+\item{stan_model}{precompiled Stan model object (if NULL, model will be compiled from stan_file_path).
+Used by bayescoveragedeploy to pass precompiled models for users without C++ compilers.}
 
 \item{backend}{character string specifying the Stan backend to use. Options are:
 \itemize{

@@ -56,6 +56,8 @@
 #'
 #' @param generate_quantities binary vector indicating whether to simulate data from the fitted model
 #' @param stan_file_path stan file path (if NULL, uses internal stan file)
+#' @param stan_model precompiled Stan model object (if NULL, model will be compiled from stan_file_path).
+#'   Used by bayescoveragedeploy to pass precompiled models for users without C++ compilers.
 #' @param backend character string specifying the Stan backend to use. Options are:
 #'   \itemize{
 #'     \item \code{"cmdstanr"} (default): Use cmdstanr interface (recommended, modern)
@@ -249,6 +251,7 @@ fit_model <- function(
   get_posteriors = TRUE,
 
   stan_file_path = NULL,
+  stan_model = NULL,  # precompiled Stan model (from bayescoveragedeploy or other source)
   # backend selection
   backend = c("cmdstanr", "rstan"),
   # outputdir
@@ -1200,14 +1203,21 @@ fit_model <- function(
     }
   }
 
-  # Final check
-  if (stan_file_path == "" || !file.exists(stan_file_path)) {
-    stop(paste0("Could not find Stan file: ", stanmodelname, ".stan\n",
-                "Searched path: ", stan_file_path))
+  # Final check (skip if precompiled model provided)
+  if (is.null(stan_model)) {
+    if (stan_file_path == "" || !file.exists(stan_file_path)) {
+      stop(paste0("Could not find Stan file: ", stanmodelname, ".stan\n",
+                  "Searched path: ", stan_file_path))
+    }
+    print(paste("Using Stan file at:", stan_file_path))
   }
-  print(paste("Using Stan file at:", stan_file_path))
 
-  if (compile_model){
+  # Compile or use precompiled model
+  if (!is.null(stan_model)) {
+    # Use provided precompiled model (e.g., from bayescoveragedeploy)
+    print("Using precompiled Stan model")
+  } else if (compile_model) {
+    # Compile model from source
     stan_model <- compile_model(force_recompile = force_recompile,
                                 stan_file_path = stan_file_path,
                                 backend = backend)
@@ -1279,8 +1289,10 @@ fit_model <- function(
       list(count = "fix_smoothing", var = "tau_fixed"),
       #array[fix_nonse ? 1 : 0] real<lower=0> sdbias_fixed;
       list(count = "fix_nonse", var = "sdbias_fixed")#,
-      # need exceptions
+      # need exception if S = 1
       # array[fix_nonse ? S : 0] real<lower=0> nonse_fixed;
+
+      # add_dataoutliers NOT USED?
       # list(count = "fix_nonse", var = "nonse_fixed"),
       #array[add_dataoutliers*fix_nonse ? 1 : 0] real<lower=0> global_shrinkage_dm_fixed;
       #array[add_dataoutliers*fix_nonse ? 1 : 0] real<lower=0> caux_dm_fixed;
@@ -1318,6 +1330,12 @@ fit_model <- function(
           #   }
         }
       }
+    }
+    # need exception if S = 1
+    # array[fix_nonse ? S : 0] real<lower=0> nonse_fixed;
+
+    if (stan_data$S == 1 & stan_data$fix_nonse ){
+      dim(stan_data$nonse_fixed) <- 1
     }
   }
 
@@ -1367,7 +1385,7 @@ fit_model <- function(
               hier_data)
 
 
-  if (compile_model){
+  if (compile_model || !is.null(stan_model)){
     result$stan_model <- stan_model
   }
   if (subnational){
