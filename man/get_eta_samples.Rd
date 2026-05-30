@@ -7,7 +7,7 @@
 get_eta_samples(fit, year_select = 2023, countryyear_select = NULL)
 }
 \arguments{
-\item{fit}{A fitted model object containing \code{samples} (cmdstanr draws),
+\item{fit}{A fitted model object containing \code{samples} (cmdstanr or rstan fit object),
 \code{geo_unit_index}, \code{time_index}, \code{stan_data}, and \code{data}.}
 
 \item{year_select}{The year for which to extract eta samples. Default is 2023.

@@ -104,8 +104,6 @@ test_compilation <- function() {
     cat("Testing cmdstanr compilation... ")
     tryCatch({
       model_cmdstan <- compile_model(
-        variational = FALSE,
-        nthreads_variational = 1,
         force_recompile = FALSE,
         stan_file_path = stan_file_path,
         backend = "cmdstanr"
@@ -122,8 +120,6 @@ test_compilation <- function() {
     cat("Testing rstan compilation... ")
     tryCatch({
       model_rstan <- compile_model(
-        variational = FALSE,
-        nthreads_variational = 1,
         force_recompile = FALSE,
         stan_file_path = stan_file_path,
         backend = "rstan"
@@ -168,24 +164,25 @@ test_fitting <- function() {
     iter_warmup = 5,
     refresh = 0,
     seed = 123,
+    # code for summary object does NOT work for rstan
     save_post_summ = FALSE
     #,
   # get_posteriors = FALSE,  # Skip posterior processing for speed
    # create_runname_and_outputdir = FALSE
   )
 
-  # if (has_cmdstanr) {
-  #   cat("\nFitting with cmdstanr backend...\n")
-  #   tryCatch({
-  #     fit_cmdstan <- do.call(fit_model, c(fit_args, list(backend = "cmdstanr")))
-  #     cat("✓ cmdstanr fit completed\n")
-  #     results$cmdstanr <- "success"
-  #     fits$cmdstanr <- fit_cmdstan
-  #   }, error = function(e) {
-  #     cat("✗ cmdstanr fit FAILED:", conditionMessage(e), "\n")
-  #     results$cmdstanr <- paste("failed:", conditionMessage(e))
-  #   })
-  # }
+  if (has_cmdstanr) {
+    cat("\nFitting with cmdstanr backend...\n")
+    tryCatch({
+      fit_cmdstan <- do.call(fit_model, c(fit_args, list(backend = "cmdstanr")))
+      cat("✓ cmdstanr fit completed\n")
+      results$cmdstanr <- "success"
+      fits$cmdstanr <- fit_cmdstan
+    }, error = function(e) {
+      cat("✗ cmdstanr fit FAILED:", conditionMessage(e), "\n")
+      results$cmdstanr <- paste("failed:", conditionMessage(e))
+    })
+  }
 
   if (has_rstan) {
     cat("\nFitting with rstan backend...\n")

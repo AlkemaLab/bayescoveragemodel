@@ -80,8 +80,7 @@
 #' @param refresh number of iterations between progress updates
 #' @param adapt_delta target acceptance rate for the No-U-Turn Sampler
 #' @param max_treedepth maximum tree depth for the No-U-Turn Sampler
-#' @param variational boolean indicator of whether to use variational inference (not yet tested)
-#' @param nthreads_variational number of threads to use for variational inference
+#' @param save_post_summ boolean indicator of whether to save summary object (does NOT work for rstan backend)
 #'
 #' @return fpemplus object.
 #'
@@ -269,14 +268,6 @@ fit_model <- function(
   refresh = 10,
   adapt_delta = 0.9,
   max_treedepth = 14,
-  # # settings for variational inference
-  # not tested yet
-  variational = FALSE,
-  # if variational, just compile model with threading support and pass back model and stan_data
-  ##variational = variational | !add_sample, # no sampling when TRUE
-  nthreads_variational = 8, #40, # 8
-  # max_lbfgs_iters = 1000, # default is 1000
-  # num_psis_draws = 1000,
 
   add_inits = TRUE
   # # Stan settings
@@ -1217,9 +1208,7 @@ fit_model <- function(
   print(paste("Using Stan file at:", stan_file_path))
 
   if (compile_model){
-    stan_model <- compile_model(variational = variational,
-                                nthreads_variational = nthreads_variational,
-                                force_recompile = force_recompile,
+    stan_model <- compile_model(force_recompile = force_recompile,
                                 stan_file_path = stan_file_path,
                                 backend = backend)
   }
@@ -1399,14 +1388,12 @@ fit_model <- function(
     if (create_runname_and_outputdir & is.null(runname)){
       run_type <- if(validation_run == TRUE) "val" else "run"
       # set up directory to store the run
-      runname <- paste0(indicator, "_", runstep, "_", run_type, "_", runnumber,
-                        ifelse(variational, "_variational", ""))
+      runname <- paste0(indicator, "_", runstep, "_", run_type, "_", runnumber)
       output_dir <- get_relative_output_dir(runname)
       while(dir.exists(output_dir) & runnumber < 100) {
         print("output directory already exists, increasing runnumber by 1")
         runnumber <- runnumber + 1
-        runname <- paste0(indicator, "_", runstep, "_", run_type, "_", runnumber,
-                          ifelse(variational, "_variational", ""))
+        runname <- paste0(indicator, "_", runstep, "_", run_type, "_", runnumber)
         output_dir <- get_relative_output_dir(runname)
       }
       if (runnumber == 100){
@@ -1430,76 +1417,58 @@ fit_model <- function(
   if (!add_sample){
     return(result)
   }
-  if (!variational){
-    if (add_inits){
-      init_ll <- lapply(1:chains, function(id) {
-        inits <- init_fun(chain_id = id, stan_data)
-        # Fix initialization dimensions for rstan backend
-        fix_init_dims_for_rstan(inits, backend = backend)
-      })
-    } else {
-      init_ll <- NULL
-    }
-
-    # Backend-specific sampling
-    if (backend == "cmdstanr") {
-      # cmdstanr sampling
-      fit <- stan_model$sample(
-        stan_data,
-        save_latent_dynamics = TRUE,
-        init = init_ll,
-        chains = chains,
-        parallel_chains  = chains,
-        iter_sampling = iter_sampling,
-        iter_warmup = iter_warmup,
-        seed = seed,
-        refresh = refresh,
-        adapt_delta = adapt_delta,
-        max_treedepth = max_treedepth,
-        save_cmdstan_config = TRUE
-      )
-
-    } else if (backend == "rstan") {
-      # rstan sampling
-      fit <- rstan::sampling(
-        object = stan_model,
-        data = stan_data,
-        init = init_ll,
-        chains = chains,
-        cores = chains,  # parallel chains
-        iter = iter_sampling + iter_warmup,
-        warmup = iter_warmup,
-        seed = seed,
-        # for testing
-        verbose = TRUE,
-        refresh = refresh,
-        control = list(adapt_delta = adapt_delta,
-                       max_treedepth = max_treedepth)
-      )
-
-    } else {
-      stop("Unknown backend: ", backend)
-    }
-
-    # Store the samples - use list() to ensure proper structure
-    result$samples <- fit
+  if (add_inits){
+    init_ll <- lapply(1:chains, function(id) {
+      inits <- init_fun(chain_id = id, stan_data)
+      # Fix initialization dimensions for rstan backend
+      fix_init_dims_for_rstan(inits, backend = backend)
+    })
   } else {
-    # variational
-    # no longer tested
-    fit_pf <- fit$stan_model$pathfinder(data = fit$stan_data, seed = seed,
-                                        init = function(chain_id) init_fun(chain_id = chain_id, fit$stan_data),
-                                        #init = 0,
-                                        # num_psis_draws = num_psis_draws,
-                                        num_paths= nthreads_variational,
-                                        num_threads = nthreads_variational,
-                                        max_lbfgs_iters = max_lbfgs_iters, # default is 1000
-                                        single_path_draws=50,
-                                        output_dir = results$output_dir,
-                                        history_size = 50
-    )
-    # Store the samples - use list assignment to ensure proper structure
-    result$samples <- fit_pf
+    init_ll <- NULL
   }
+
+  # Backend-specific sampling
+  if (backend == "cmdstanr") {
+    # cmdstanr sampling
+    fit <- stan_model$sample(
+      stan_data,
+      save_latent_dynamics = TRUE,
+      init = init_ll,
+      chains = chains,
+      parallel_chains  = chains,
+      iter_sampling = iter_sampling,
+      iter_warmup = iter_warmup,
+      seed = seed,
+      refresh = refresh,
+      adapt_delta = adapt_delta,
+      max_treedepth = max_treedepth,
+      save_cmdstan_config = TRUE
+    )
+
+  } else if (backend == "rstan") {
+    # rstan sampling
+    fit <- rstan::sampling(
+      object = stan_model,
+      data = stan_data,
+      init = init_ll,
+      chains = chains,
+      cores = chains,  # parallel chains
+      iter = iter_sampling + iter_warmup,
+      warmup = iter_warmup,
+      seed = seed,
+      # for testing
+      verbose = TRUE,
+      refresh = refresh,
+      control = list(adapt_delta = adapt_delta,
+                     max_treedepth = max_treedepth)
+    )
+
+  } else {
+    stop("Unknown backend: ", backend)
+  }
+
+  # Store the samples
+  result$samples <- fit
 
   result$data <- add_uncertainty_in_obs(result)
   if (runstep %in% "local_subnational"){

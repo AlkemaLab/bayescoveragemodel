@@ -1,5 +1,5 @@
 
-compile_model <- function(variational, nthreads_variational, force_recompile, #mypackage = "fpet2",
+compile_model <- function(force_recompile, #mypackage = "fpet2",
                           stan_file_path, backend = "cmdstanr"){
 
   # Check that requested backend is available
@@ -17,9 +17,6 @@ compile_model <- function(variational, nthreads_variational, force_recompile, #m
       stan_file = stan_file_path,
       ## related to pre-instantiate code
       ##         include_paths = include_paths,
-      # for variational, use threads per chain
-      cpp_options = list(stan_threads = ifelse(variational, TRUE, FALSE),
-                         threads = nthreads_variational),
       # quiet = FALSE,
       force_recompile = force_recompile
     )
