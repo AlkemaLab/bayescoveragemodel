@@ -1072,9 +1072,6 @@ fit_model <- function(
     dat_routine <- NULL
     routine_list <- NULL
   } else {
-    if (!requireNamespace("brms", quietly = TRUE)) {
-      stop("Package 'brms' is required. Please install it.", call. = FALSE)
-    }
     #hyper_param <- readRDS(here::here("data_raw/internal/", paste0("routine_hyperparameters_", indicator, ".rds")))
     #hyper_param <- get(paste0("routine_hyperparameters_", indicator))
 
