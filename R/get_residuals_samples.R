@@ -52,7 +52,7 @@ get_residuals_samples <- function(fit) {
     year = fit$data$year,
     name_region = fit$data$name_region,
     data_series_type = fit$data$data_series_type
-  ) %>%
+  ) |>
     dplyr::mutate(y_prop = probit(y))
 
  # Add cluster and subcluster if available in fit$data
@@ -69,38 +69,38 @@ get_residuals_samples <- function(fit) {
 
   # Extract draws - include y_sim for validation runs
   params <- if (is_validation) c("eta_i", "scale", "y_sim") else c("eta_i", "scale")
-  draws <- fit$samples$draws(params)
+  draws <- extract_draws(fit, params)
 
   if (is_validation) {
-    draws <- draws %>%
+    draws <- draws |>
       tidybayes::spread_draws(eta_i[i], scale[i], y_sim[i])
   } else {
-    draws <- draws %>%
+    draws <- draws |>
       tidybayes::spread_draws(eta_i[i], scale[i])
   }
 
-  draws <- draws %>%
-    dplyr::ungroup() %>%
-    dplyr::select(-.chain, -.iteration) %>%
+  draws <- draws |>
+    dplyr::ungroup() |>
+    dplyr::select(-.chain, -.iteration) |>
     dplyr::rename(draw = .draw, obs_index = i)
 
   # Filter to held_out observations for validation runs
   if (is_validation) {
-    held_out_indices <- y_df %>%
-      dplyr::filter(held_out) %>%
+    held_out_indices <- y_df |>
+      dplyr::filter(held_out) |>
       dplyr::pull(obs_index)
     # also remove countries without data in training set
-    y_df <- y_df %>%
-      dplyr::group_by(iso) %>%
-      dplyr::mutate(n_train = sum(!held_out)) %>%
-      dplyr::ungroup() %>%
+    y_df <- y_df |>
+      dplyr::group_by(iso) |>
+      dplyr::mutate(n_train = sum(!held_out)) |>
+      dplyr::ungroup() |>
       dplyr::filter(n_train > 0, held_out,  data_series_type == "DHS")
-    draws <- draws %>%
+    draws <- draws |>
       dplyr::filter(obs_index %in% y_df$obs_index)
   }
 
   # Add scale transformations
-  draws <- draws %>%
+  draws <- draws |>
     dplyr::mutate(
       level_prop = eta_i,
       level = inv_probit(level_prop),
@@ -112,15 +112,15 @@ get_residuals_samples <- function(fit) {
   # Select draw columns - include y_sim for validation runs
   draw_cols <- c("obs_index", "draw", "yhat", "sd_y", "level", "level_prop", "sd_y_prop")
   if (is_validation) draw_cols <- c(draw_cols, "y_sim")
-  draws <- draws %>%
+  draws <- draws |>
     dplyr::select(dplyr::all_of(draw_cols))
 
   # Nest draws by observation and join with observation data
-  draws_nested <- draws %>%
+  draws_nested <- draws |>
     tidyr::nest(draws = -obs_index)
 
-  df <- y_df %>%
-    dplyr::left_join(draws_nested, by = "obs_index") %>%
+  df <- y_df |>
+    dplyr::left_join(draws_nested, by = "obs_index") |>
     dplyr::select(obs_index, y, y_prop, held_out, iso, year,
                   dplyr::any_of(c("cluster", "subcluster")),
                   name_region, data_series_type, draws)

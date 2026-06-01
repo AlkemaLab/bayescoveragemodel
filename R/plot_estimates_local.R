@@ -11,9 +11,6 @@
 #' @param save_plots Boolean indicator, if set to TRUE plots will be saved in output directory of results fit.
 #' @param output_folder Folder to save plots in, if save_plots is TRUE, to overwrite where plots are saved.
 #'
-#' @import ggpubr
-#' @import ggnewscale
-#' @import ggplot2
 #' @export
 plot_estimates_local_all <- function(results,
                                      dat_routine = NULL,
@@ -39,11 +36,11 @@ plot_estimates_local_all <- function(results,
   geo_col <- ifelse(subnational, "admin1", "iso")
 
   # Get unique country or subnational codes
-  model_country_codes <- results$posteriors$temporal[[geo_col]] %>% unique()
+  model_country_codes <- results$posteriors$temporal[[geo_col]] |> unique()
 
-  # TO DO: update for subnational
+  # subnational future additions
   if(!is.null(dat_routine)){
-    routine_country_codes <- dat_routine %>% pull(!!sym(geo_col)) %>% unique()
+    routine_country_codes <- dat_routine |> dplyr::pull(!!rlang::sym(geo_col)) |> unique()
     plot_name <- paste0(plot_name, "_wroutinedata")
 
     country_codes <- model_country_codes[model_country_codes %in% routine_country_codes]
@@ -67,13 +64,13 @@ plot_estimates_local_all <- function(results,
   fit_data <- results$data
 
   # Collect all survey types across all countries to be plotted for consistent legends
-  all_survey_types <- fit_data %>%
-    filter(.data[[geo_col]] %in% country_codes, !is.na(est_indicator)) %>%
-    pull(data_series_type) %>%
+  all_survey_types <- fit_data |>
+    dplyr::filter(.data[[geo_col]] %in% country_codes, !is.na(est_indicator)) |>
+    dplyr::pull(data_series_type) |>
     unique()
 
   if(is.null(indicator_name)){
-    indicator_name <- results$data$indic %>% unique()
+    indicator_name <- results$data$indic |> unique()
     if(length(indicator_name) > 1){
       indicator_name <- "ANC4"
     }
@@ -83,19 +80,19 @@ plot_estimates_local_all <- function(results,
 
   for (i in 1:length(country_codes)) {
 
-    filtered_data <- fit_data %>% filter(.data[[geo_col]] == country_codes[i])
+    filtered_data <- fit_data |> dplyr::filter(.data[[geo_col]] == country_codes[i])
 
     if (all(is.na(filtered_data$est_indicator))) {
       filtered_data <- NULL
     } else {
-      filtered_data <- filtered_data %>% filter(!is.na(est_indicator))
+      filtered_data <- filtered_data |> dplyr::filter(!is.na(est_indicator))
     }
 
-    estimates <- results$posteriors$temporal %>% filter(.data[[geo_col]] == country_codes[i])
+    estimates <- results$posteriors$temporal |> dplyr::filter(.data[[geo_col]] == country_codes[i])
 
-    estimates2 <- if (!is.null(results2)) results2$posteriors$temporal %>% filter(.data[[geo_col]] == country_codes[i]) else NULL
-    estimates3 <- if (!is.null(results3)) results3$posteriors$temporal %>% filter(.data[[geo_col]] == country_codes[i]) else NULL
-    estimates4 <- if (!is.null(results4)) results4$posteriors$temporal %>% filter(.data[[geo_col]] == country_codes[i]) else NULL
+    estimates2 <- if (!is.null(results2)) results2$posteriors$temporal |> dplyr::filter(.data[[geo_col]] == country_codes[i]) else NULL
+    estimates3 <- if (!is.null(results3)) results3$posteriors$temporal |> dplyr::filter(.data[[geo_col]] == country_codes[i]) else NULL
+    estimates4 <- if (!is.null(results4)) results4$posteriors$temporal |> dplyr::filter(.data[[geo_col]] == country_codes[i]) else NULL
 
     p <- plot_estimates_local(estimates,
                               filtered_data,
@@ -110,37 +107,37 @@ plot_estimates_local_all <- function(results,
 
     if (!is.null(results$dat_routine)){
       dat_routine_select <-
-        results$dat_routine %>%
-        filter(.data[[geo_col]] == country_codes[i]) %>%
-        mutate(included = "Yes", data_series_type = "Routine data")
+        results$dat_routine |>
+        dplyr::filter(.data[[geo_col]] == country_codes[i]) |>
+        dplyr::mutate(included = "Yes", data_series_type = "Routine data")
       if (dim(dat_routine_select)[1] > 0){
         p <- p +
-          #geom_errorbar(data = dat_routine_select,
-          #              aes(x = year, y = routine_value, ymin = routine_lower, ymax = routine_upper,
+          #ggplot2::geom_errorbar(data = dat_routine_select,
+          #              ggplot2::aes(x = year, y = routine_value, ymin = routine_lower, ymax = routine_upper,
           #                  colour = data_series_type), alpha = 0.3) +
-          geom_point(data = dat_routine_select,
-                     aes(x = year, y = routine_value, # routine_value in original version
+          ggplot2::geom_point(data = dat_routine_select,
+                     ggplot2::aes(x = year, y = routine_value, # routine_value in original version
                          colour = data_series_type))
       }
     }
 
     if(!is.null(dat_routine)){
-      dat_routine_select <- dat_routine %>%
-        filter(.data[[geo_col]] == country_codes[i]) %>%
-        mutate(included = "No", data_series_type = "Routine data")
+      dat_routine_select <- dat_routine |>
+        dplyr::filter(.data[[geo_col]] == country_codes[i]) |>
+        dplyr::mutate(included = "No", data_series_type = "Routine data")
       if (dim(dat_routine_select)[1] > 0){
         p <- p +
-          #geom_errorbar(data = dat_routine_select,
-          #              aes(x = year, y = routine_value, ymin = routine_lower, ymax = routine_upper,
+          #ggplot2::geom_errorbar(data = dat_routine_select,
+          #              ggplot2::aes(x = year, y = routine_value, ymin = routine_lower, ymax = routine_upper,
           #                  colour = data_series_type), alpha = 0.3) +
-          geom_point(data = dat_routine_select,
-                     aes(x = year, y = routine_value, # routine_value in original version
+          ggplot2::geom_point(data = dat_routine_select,
+                     ggplot2::aes(x = year, y = routine_value, # routine_value in original version
                          colour = data_series_type))
       }
     }
 
     if (!is.null(filtered_data)){
-      plot_title <- ifelse(subnational, filtered_data %>% pull(level) %>% unique(), filtered_data %>% pull(country) %>% unique())
+      plot_title <- ifelse(subnational, filtered_data |> dplyr::pull(level) |> unique(), filtered_data |> dplyr::pull(country) |> unique())
       iso_select <- filtered_data$iso[1]
     } else {
       plot_title <- country_codes[i]
@@ -149,18 +146,18 @@ plot_estimates_local_all <- function(results,
 
     # add caption
     if (add_caption)
-      p <- p + labs(caption = plot_caption)
+      p <- p + ggplot2::labs(caption = plot_caption)
     # note for toy plots
     # when using annotate, we can no longer combine plots later on (and share legends across plots)
     if (use_for_facetting){
-      plot_list[[plot_title]] <- p + ggtitle(paste0(plot_title, " (",iso_select, ")")) #+ theme(legend.position = "none")
+      plot_list[[plot_title]] <- p + ggplot2::ggtitle(paste0(plot_title, " (",iso_select, ")")) #+ ggplot2::theme(legend.position = "none")
     } else {
-      plot_list[[i]] <- annotate_figure(p, top = text_grob(paste0(plot_title, " (",country_codes[i], ")"),
+      plot_list[[i]] <- ggpubr::annotate_figure(p, top = ggpubr::text_grob(paste0(plot_title, " (",country_codes[i], ")"),
                                              face = "bold", size = 14))
       # temp: only show plot title region (iso)
       # and show National if missing
       plot_title <- ifelse(is.na(plot_title), "National aggregate", plot_title)
-      plot_list[[i]] <- annotate_figure(p, top = text_grob(paste0(plot_title, " (",iso_select, ")"),
+      plot_list[[i]] <- ggpubr::annotate_figure(p, top = ggpubr::text_grob(paste0(plot_title, " (",iso_select, ")"),
                                                            face = "bold", size = 14))
     }
   }
@@ -197,8 +194,6 @@ plot_estimates_local_all <- function(results,
 #' @param all_survey_types Optional character vector of all survey types to include in legend (for consistent legends across multiple plots).
 #' @param cols_sourcetypes A named vector of colors for the different data series types (e.g., DHS, MICS, etc.).
 #'
-#' @import ggplot2
-#' @import ggnewscale
 #' @keywords internal
 
 plot_estimates_local <- function(estimates,
@@ -223,64 +218,64 @@ plot_estimates_local <- function(estimates,
   #model <- NULL
   # temp fix for model names when just plotting one model
   estimates <-
-    estimates %>%
-    mutate(model = modelnames[1])
+    estimates |>
+    dplyr::mutate(model = modelnames[1])
 
   if (!is.null(estimates2)){
-    estimates <- bind_rows(
-      estimates, # %>% mutate(model = modelnames[1]),
-      estimates2 %>% mutate(model = modelnames[2])
+    estimates <- dplyr::bind_rows(
+      estimates, # |> dplyr::mutate(model = modelnames[1]),
+      estimates2 |> dplyr::mutate(model = modelnames[2])
     )
   }
   if (!is.null(estimates3)){
-    estimates <- bind_rows(
+    estimates <- dplyr::bind_rows(
       estimates,
-      estimates3 %>% mutate(model = modelnames[3])
+      estimates3 |> dplyr::mutate(model = modelnames[3])
     )
   }
   if (!is.null(estimates4)){
-    estimates <- bind_rows(
+    estimates <- dplyr::bind_rows(
       estimates,
-      estimates4 %>% mutate(model = modelnames[4])
+      estimates4 |> dplyr::mutate(model = modelnames[4])
     )
   }
 
   # Filter out empty model names (padding from compare_fits)
-  estimates <- estimates %>% filter(model != "")
+  estimates <- estimates |> dplyr::filter(model != "")
 
   # Get unique model names for consistent ordering
   model_levels <- unique(estimates$model)
 
-  p <- estimates %>%
-    ggplot(aes(x = year, y = `50%`)) +
-    labs(x = "Year", y = indicator_name) +
-    theme_bw() +
-    expand_limits(y = 0)
+  p <- estimates |>
+    ggplot2::ggplot(ggplot2::aes(x = year, y = `50%`)) +
+    ggplot2::labs(x = "Year", y = indicator_name) +
+    ggplot2::theme_bw() +
+    ggplot2::expand_limits(y = 0)
   if (add_estimates){
     p <- p +
-      geom_ribbon(aes(ymin = `2.5%`, ymax = `97.5%`, fill = model),
+      ggplot2::geom_ribbon(ggplot2::aes(ymin = `2.5%`, ymax = `97.5%`, fill = model),
                   colour = NA, alpha = 0.3, show.legend = FALSE) +
-      geom_line(aes(color = model, lty = model), linewidth = 1.2)
+      ggplot2::geom_line(ggplot2::aes(color = model, lty = model), linewidth = 1.2)
     #+
-    #  scale_color_discrete(name = "Model", limits = model_levels) +
-    #  scale_linetype_discrete(name = "Model", limits = model_levels)
+    #  ggplot2::scale_color_discrete(name = "Model", limits = model_levels) +
+    #  ggplot2::scale_linetype_discrete(name = "Model", limits = model_levels)
   }
 
   if (!is.null(filtered_data)) {
-    filtered_data <- filtered_data %>%
-      mutate(included = ifelse(held_out == 1, "No", "Yes"))
+    filtered_data <- filtered_data |>
+      dplyr::mutate(included = ifelse(held_out == 1, "No", "Yes"))
 
     # Use all_survey_types if provided for consistent legend across plots
     survey_limits <- if (!is.null(all_survey_types)) all_survey_types else NULL
 
     p <- p +
-      new_scale_color() +
-      geom_errorbar(data = filtered_data,
-                    aes(y = est_indicator, ymin = low_indicator,
+      ggnewscale::new_scale_color() +
+      ggplot2::geom_errorbar(data = filtered_data,
+                    ggplot2::aes(y = est_indicator, ymin = low_indicator,
                         ymax = up_indicator, color = data_series_type), alpha = 0.3, width = 0.1) +
-      geom_point(data = filtered_data,
-                 aes(y = est_indicator, x = year, color = data_series_type)) +
-      scale_colour_manual(values = cols_sourcetypes, name = "Survey type",
+      ggplot2::geom_point(data = filtered_data,
+                 ggplot2::aes(y = est_indicator, x = year, color = data_series_type)) +
+      ggplot2::scale_colour_manual(values = cols_sourcetypes, name = "Survey type",
                           limits = survey_limits, drop = FALSE)
   }
 

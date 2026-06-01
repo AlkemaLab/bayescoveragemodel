@@ -81,8 +81,8 @@ get_se_probitofinvprobitprop <- function(invprobitprop, se_invprobitprop){
 #'
 #' @importFrom dplyr mutate
 backtransform_residuals <- function(df){
-  df %>%
-    mutate(response = level + residual,
+  df |>
+    dplyr::mutate(response = level + residual,
        residual_ori = probit(response) - probit(level),
        scale_ori =
          get_se_probitofinvprobitprop(
@@ -122,7 +122,7 @@ backtransform_residuals <- function(df){
 #' @keywords internal
 add_probit_scale_columns <- function(df, eta_col, sd_col = NULL, sd_value = 1,
                                      y_col = NULL) {
-  df <- df %>%
+  df <- df |>
     dplyr::mutate(
       level_prop = .data[[eta_col]],
       level = inv_probit(level_prop),
@@ -133,13 +133,13 @@ add_probit_scale_columns <- function(df, eta_col, sd_col = NULL, sd_value = 1,
   # Add y column if not provided and residual exists
 
   if (is.null(y_col) && "residual" %in% names(df)) {
-    df <- df %>%
+    df <- df |>
       dplyr::mutate(y = residual + yhat)
     y_col <- "y"
   }
 
   # Add proportion-scale transformations
-  df <- df %>%
+  df <- df |>
     dplyr::mutate(
       sd_y_prop = get_se_probitofinvprobitprop(level, sd_y),
       y_prop = if (!is.null(y_col)) probit(.data[[y_col]]) else NA_real_

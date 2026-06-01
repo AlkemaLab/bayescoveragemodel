@@ -56,6 +56,13 @@
 #'
 #' @param generate_quantities binary vector indicating whether to simulate data from the fitted model
 #' @param stan_file_path stan file path (if NULL, uses internal stan file)
+#' @param stan_model precompiled Stan model object (if NULL, model will be compiled from stan_file_path).
+#'   Used by bayescoveragedeploy to pass precompiled models for users without C++ compilers.
+#' @param backend character string specifying the Stan backend to use. Options are:
+#'   \itemize{
+#'     \item \code{"cmdstanr"} (default): Use cmdstanr interface (recommended, modern)
+#'     \item \code{"rstan"}: Use rstan interface (legacy, may be required for some workflows)
+#'   }
 #'
 #' Setting for where to save things
 #' @param create_runname_and_outputdir boolean indicator of whether to create a runname and output directory
@@ -75,8 +82,7 @@
 #' @param refresh number of iterations between progress updates
 #' @param adapt_delta target acceptance rate for the No-U-Turn Sampler
 #' @param max_treedepth maximum tree depth for the No-U-Turn Sampler
-#' @param variational boolean indicator of whether to use variational inference (not yet tested)
-#' @param nthreads_variational number of threads to use for variational inference
+#' @param save_post_summ boolean indicator of whether to save summary object (does NOT work for rstan backend)
 #'
 #' @return fpemplus object.
 #'
@@ -161,10 +167,8 @@
 #'   current fit must also have been included in the `data` used for the
 #'   `global_fit`.
 #'
-#' @importFrom cmdstanr cmdstan_model write_stan_file
 #' @importFrom tibble tibble
 #' @importFrom splines bs
-#' @import dplyr
 #' @importFrom readr read_file
 #' @importFrom stringr str_replace_all
 #'
@@ -237,13 +241,17 @@ fit_model <- function(
   validation_cutoff_year = NULL, # if not NULL, should be a year and is used to define/overwrite held_out set
   validation_run = FALSE,
 
-  save_post_summ = FALSE, # added to be able to save results in a local_national run
+  save_post_summ = TRUE, # added to be able to NOT save results in a step1a etc run
+
   # Model checks
   generate_quantities = TRUE,
   # misc
   get_posteriors = TRUE,
 
   stan_file_path = NULL,
+  stan_model = NULL,  # precompiled Stan model (from bayescoveragedeploy or other source)
+  # backend selection
+  backend = c("cmdstanr", "rstan"),
   # outputdir
   ## note: this is automated, consider updating default
   create_runname_and_outputdir = TRUE,
@@ -261,14 +269,6 @@ fit_model <- function(
   refresh = 10,
   adapt_delta = 0.9,
   max_treedepth = 14,
-  # # settings for variational inference
-  # not tested yet
-  variational = FALSE,
-  # if variational, just compile model with threading support and pass back model and stan_data
-  ##variational = variational | !add_sample, # no sampling when TRUE
-  nthreads_variational = 8, #40, # 8
-  # max_lbfgs_iters = 1000, # default is 1000
-  # num_psis_draws = 1000,
 
   add_inits = TRUE
   # # Stan settings
@@ -276,8 +276,11 @@ fit_model <- function(
 
 ) {
 
+  # Match backend argument
+  backend <- match.arg(backend)
+
   data <- survey_df # for now, just to keep the same name as in fpem
-  indicator <- data %>% pull(indic) %>% unique()
+  indicator <- data |> dplyr::pull(indic) |> unique()
   if (length(indicator) != 1){
     stop("survey data needs to contain data for just 1 indicator")
   }
@@ -295,7 +298,7 @@ fit_model <- function(
 
   ###### What type of run is this, and what settings do we need? #####
   # if runstep is step1a, we use the defaults
-  # to do: finish subnational, settings here
+  # for subnational future additions, settings here
   subnational = FALSE
   population_data = NULL
   area = "iso"
@@ -361,7 +364,7 @@ fit_model <- function(
     }
 
     print("We use a global fit, and take selected settings from there.")
-    # minor to do: print these settings?
+    # general code improvement: print these settings?
     print("settings for the spline_degree and num_knots taken from global run")
     spline_degree <- global_fit$spline_degree
     num_knots <- global_fit$num_knots
@@ -452,22 +455,22 @@ fit_model <- function(
   # keep the names of the original data
   names_original_data <- names(data)
   print("We filter data to be inside estimation period")
-  data <- data %>%
-    filter(year >= start_year, year <= end_year)
+  data <- data |>
+    dplyr::filter(year >= start_year, year <= end_year)
 
   if (!(runstep %in% c("global_subnational", "local_subnational"))){
     print("We use national data")
     if (runstep == "local_national" & !is.null(iso_select)){
       print(paste("We only use data for", iso_select))
-      data <- data %>%
-        filter(iso %in% iso_select)
+      data <- data |>
+        dplyr::filter(iso %in% iso_select)
     }
   } else {
     print("We use subnational data (but you already knew that)")
     if (runstep == "local_subnational"& !is.null(iso_select)){
       print(paste("We only use data for", iso_select))
-      data <- data %>%
-        filter(iso %in% iso_select)
+      data <- data |>
+        dplyr::filter(iso %in% iso_select)
     }
   }
 
@@ -476,15 +479,15 @@ fit_model <- function(
     if (global_fit$data_from2010only){
       print("We fit to survey data from 2010 onwards.")
       data <-
-        data %>%
-        filter(year >= 2010)
+        data |>
+        dplyr::filter(year >= 2010)
     }
   }
 
   if (runstep == "step1a"){
     print("We do give nonSE to DHS (by temporarily renaming DHS into DHS0)")
-    data <- data %>%
-      mutate(data_series_type = ifelse(data_series_type == "DHS", "DHS0", data_series_type))
+    data <- data |>
+      dplyr::mutate(data_series_type = ifelse(data_series_type == "DHS", "DHS0", data_series_type))
   }
 
   # what validation data to use?
@@ -574,43 +577,6 @@ fit_model <- function(
       stop("The top levels of hierarchical_splines must match the levels that were used for the global fit.")
     }
 
-    # check that hierarchical terms and sigmas to fix are all contained at the
-    # top of the levels in the hierarchy used in the global fit
-    # to do: need to update checks...
-    # if (#!all(hierarchical_asymptote_sigmas_fixed %in% global_fit$hierarchical_asymptote) ||
-    #     !all(hierarchical_asymptote_terms_fixed %in% global_fit$hierarchical_asymptote)) {
-    #   stop("Hierarchical estimates to fix for hierarchical_asymptote were not estimated in the global fit.")
-    # }
-    # if (#!all(hierarchical_asymptote_sigmas_fixed == global_fit$hierarchical_asymptote[seq_along(hierarchical_asymptote_sigmas_fixed)]) ||
-    #     !all(hierarchical_asymptote_terms_fixed == global_fit$hierarchical_asymptote[seq_along(hierarchical_asymptote_terms_fixed)])) {
-    #   stop("Hierarchical estimates to fix for hierarchical_asymptote do not match the highest hierarchical_asymptote levels estimated in the global fit.")
-    # }
-    #
-    # if (#!all(hierarchical_level_sigmas_fixed %in% global_fit$hierarchical_level) ||
-    #     !all(hierarchical_level_terms_fixed %in% global_fit$hierarchical_level)) {
-    #   stop("Hierarchical estimates to fix for hierarchical_level were not estimated in the global fit.")
-    # }
-    # if (#!all(hierarchical_level_sigmas_fixed == global_fit$hierarchical_level[seq_along(hierarchical_level_sigmas_fixed)]) ||
-    #     !all(hierarchical_level_terms_fixed == global_fit$hierarchical_level[seq_along(hierarchical_level_terms_fixed)])) {
-    #   stop("Hierarchical estimates to fix for hierarchical_level do not match the highest hierarchical_level levels estimated in the global fit.")
-    # }
-    #
-    # if (#!all(hierarchical_splines_sigmas_fixed %in% global_fit$hierarchical_splines) ||
-    #     !all(hierarchical_splines_terms_fixed %in% global_fit$hierarchical_splines)) {
-    #   stop("Hierarchical estimates to fix for hierarchical_splines were not estimated in the global fit.")
-    # }
-    # if (#!all(hierarchical_splines_sigmas_fixed == global_fit$hierarchical_splines[seq_along(hierarchical_splines_sigmas_fixed)]) ||
-    #     !all(hierarchical_splines_terms_fixed == global_fit$hierarchical_splines[seq_along(hierarchical_splines_terms_fixed)])) {
-    #   stop("Hierarchical estimates to fix for hierarchical_splines do not match the highest hierarchical_splines levels estimated in the global fit.")
-    # }
-
-    # It is not valid to fix terms at a given hierarchy level without also fixing
-    # the sigma estimate at that hierarchy level.
-    # For example, if x = mu + z * sigma,
-    # it does not make sense to fix z without also fixing sigma.
-    # on the other hand, we might fix sigma but not z if we want to borrow information
-    # about variability from global fit, but the global fit didn't produce an estimate
-    # of z for the geo unit we're interested in, or we are ok with re-estimating it?
     if (!all(hierarchical_asymptote_terms_fixed %in% hierarchical_asymptote_sigmas_fixed)) {
       stop("All values of hierarchical_asymptote_terms_fixed must also be contained in hierarchical_asymptote_sigmas_fixed")
     }
@@ -629,7 +595,7 @@ fit_model <- function(
     hierarchical_asymptote,
     hierarchical_splines,
     hierarchical_level
-  )) %>%
+  )) |>
     setdiff("intercept")
 
   # Make sure there are no NAs in any of the columns
@@ -638,7 +604,7 @@ fit_model <- function(
     #if (column == area) {
     #  check_nas_or_pops(data, column, year, population_data)
     #} else {
-    check_nas(data, column)
+    localhierarchy::check_nas(data, column)
     #}
   }
 
@@ -670,38 +636,38 @@ fit_model <- function(
 
   # (e.g., subnational areas within a country) have consecutive indices.
   # This ordering is required for correlated_smoothing to work correctly.
-  geo_unit_index <- data[!is.na(data[[area]]), ] %>%
-    dplyr::distinct(!!! syms(hierarchical_column_names)) %>%
-    dplyr::arrange(!!! syms(hierarchical_column_names)) %>%
-    dplyr::mutate(c = 1:n())
+  geo_unit_index <- data[!is.na(data[[area]]), ] |>
+    dplyr::distinct(!!! rlang::syms(hierarchical_column_names)) |>
+    dplyr::arrange(!!! rlang::syms(hierarchical_column_names)) |>
+    dplyr::mutate(c = 1:dplyr::n())
 
-  source_index <- data %>%
-    dplyr::distinct("{source}" := .data[[source]]) %>%
-    dplyr::mutate(source = 1:n())
+  source_index <- data |>
+    dplyr::distinct("{source}" := .data[[source]]) |>
+    dplyr::mutate(source = 1:dplyr::n())
 
   year_by <- c()
   year_by[year] = "year"
-  data <- data %>%
-    dplyr::left_join(time_index, by = year_by) %>%
-    dplyr::left_join(geo_unit_index, by = hierarchical_column_names) %>%
+  data <- data |>
+    dplyr::left_join(time_index, by = year_by) |>
+    dplyr::left_join(geo_unit_index, by = hierarchical_column_names) |>
     dplyr::left_join(source_index, by = source)
 
   # for fp, data needs to be sorted by country
-  data <- data %>% arrange(c)
+  data <- data |> dplyr::arrange(c)
   # now save original data
-  original_data <- data %>%
-    dplyr::select(all_of(names_original_data))
+  original_data <- data |>
+    dplyr::select(dplyr::all_of(names_original_data))
 
 
   ## all data checks and imputation related to NAs
   # Make sure there are no NAs in supplied columns
-  check_nas(data, year)
-  check_nas(data, source)
+  localhierarchy::check_nas(data, year)
+  localhierarchy::check_nas(data, source)
 
   # maybe less relevant for 1 indicator...
   # create obs_isNA
   obs_isNA <- is.na(data[[y]])
-  check_nas(data[!obs_isNA, ], se)
+  localhierarchy::check_nas(data[!obs_isNA, ], se)
   # impute arbitrary numbers to avoid NA issues?
   data[[y]][obs_isNA] <- 100
   data[[se]][obs_isNA] <- 100
@@ -747,21 +713,21 @@ fit_model <- function(
   }
   else {
     # Otherwise, pick t_star to be the mean of the observation years.
-    t_stars <- data %>%
-      dplyr::filter(!is.na(c)) %>%
-      dplyr::group_by(c) %>%
-      dplyr::summarize(t_star = round(mean(t))) %>%
+    t_stars <- data |>
+      dplyr::filter(!is.na(c)) |>
+      dplyr::group_by(c) |>
+      dplyr::summarize(t_star = round(mean(t))) |>
       dplyr::pull(t_star)
   }
 
   t_last <- max(data$t)
 
-  data <- data %>%
+  data <- data |>
     # add index for DHS
     # consider: remove dependencies on data_series_type?
-    mutate(isDHS = ifelse(data_series_type == "DHS", 1, 0))
+    dplyr::mutate(isDHS = ifelse(data_series_type == "DHS", 1, 0))
   if (!add_dataoutliers){
-    data <- data %>% mutate(nooutlier = 1)
+    data <- data |> dplyr::mutate(nooutlier = 1)
   }
 
   # add obs period per country
@@ -769,15 +735,15 @@ fit_model <- function(
     # if there are national aggregates
     t_min <- rep(min(data$t), nrow(geo_unit_index))
   } else {
-    t_min <- data %>%
-      group_by(c) %>%
-      summarise(t_min = min(t)) %>%
-      pull(t_min)
+    t_min <- data |>
+      dplyr::group_by(c) |>
+      dplyr::summarise(t_min = min(t)) |>
+      dplyr::pull(t_min)
     t_min <- ifelse(t_min > (t_stars-1), t_stars- 1, t_min)
   }
-  # t_max <- data %>%
-  #   group_by(c) %>%
-  #   summarise(t_max = max(t)) %>%
+  # t_max <- data |>
+  #   group_by(c) |>
+  #   summarise(t_max = max(t)) |>
   #   pull(t_max)
   # t_max <- ifelse(t_max < (t_stars+ 1), t_stars+ 1, t_max)
   # update: setting t_max to 2026 to avoid issues when including routine data
@@ -830,8 +796,8 @@ fit_model <- function(
   stan_data[[paste0(parname, "_prior_sd_sigma_estimate")]] <- 1
 
   hier_data <- hier_stan_data  <- list()
-  hier_data[["Ptilde_data"]] <- hierarchical_data(geo_unit_index, hierarchical_asymptote)
-  hier_stan_data[["Ptilde"]] <- hierarchical_param_stan_data(
+  hier_data[["Ptilde_data"]] <- localhierarchy::hierarchical_data(geo_unit_index, hierarchical_asymptote)
+  hier_stan_data[["Ptilde"]] <- localhierarchy::hierarchical_param_stan_data(
     global_fit = global_fit,
     param_name = "Ptilde",
     param_data = hier_data[["Ptilde_data"]],
@@ -844,8 +810,8 @@ fit_model <- function(
   stan_data[[paste0(parname, "_scalarprior_mean")]] <- 0
   stan_data[[paste0(parname, "_prior_sd_sigma_estimate")]] <- 1
 
-  hier_data[["Omega_data"]] <- hierarchical_data(geo_unit_index, hierarchical_level)
-  hier_stan_data[["Omega"]] <- hierarchical_param_stan_data(
+  hier_data[["Omega_data"]] <- localhierarchy::hierarchical_data(geo_unit_index, hierarchical_level)
+  hier_stan_data[["Omega"]] <- localhierarchy::hierarchical_param_stan_data(
     global_fit = global_fit,
     param_name ="Omega",
     param_data = hier_data[["Omega_data"]],
@@ -861,10 +827,10 @@ fit_model <- function(
 
   # for rw2
   if (model_name == "rw2"){
-    hier_data[["gamma_data"]] <- hierarchical_data(geo_unit_index,
+    hier_data[["gamma_data"]] <- localhierarchy::hierarchical_data(geo_unit_index,
                                                    # use hier from splines
                                                    hierarchical_splines)
-    hier_stan_data[["gamma"]] <- hierarchical_param_stan_data(
+    hier_stan_data[["gamma"]] <- localhierarchy::hierarchical_param_stan_data(
       global_fit = global_fit,
       param_name ="gamma",
       param_data = hier_data[["gamma_data"]],
@@ -886,9 +852,9 @@ fit_model <- function(
 
     # k is being calculated somewhere.... replaces this
     stan_data[["Betas_k_terms"]] <- stan_spline_data[["k"]]
-    hier_data[["Betas_data"]] <- hierarchical_data(geo_unit_index, hierarchical_splines)
+    hier_data[["Betas_data"]] <- localhierarchy::hierarchical_data(geo_unit_index, hierarchical_splines)
 
-    hier_stan_data[["Betas"]] <- hierarchical_param_stan_data(
+    hier_stan_data[["Betas"]] <- localhierarchy::hierarchical_param_stan_data(
       global_fit = global_fit,
       param_name = "Betas",
       param_data = hier_data[["Betas_data"]],
@@ -900,9 +866,10 @@ fit_model <- function(
     hier_stan_data <- purrr::list_flatten(hier_stan_data, name_spec = "{inner}")
  # }
 
+
+
   # if there are maxes for a sigma, update to get max for that sigma
   if (!is.null(global_fit)){
-    # to do: decide whether to use
     hier_stan_data_sigmamax <- list(
       Ptilde_sigma_max = min(hier_stan_data$Ptilde_sigma_fixed),
       Omega_sigma_max = min(hier_stan_data$Omega_sigma_fixed),
@@ -941,14 +908,14 @@ fit_model <- function(
     }
 
     # get estimates of the smoothing parameters rho and tau from the global fit
-    smoothing_data$rho_fixed <- global_fit$post_summ %>% filter(variable == "rho[1]") %>% pull(postmean)
-    smoothing_data$tau_fixed <- global_fit$post_summ %>% filter(variable == "tau[1]") %>% pull(postmean)
+    smoothing_data$rho_fixed <- global_fit$post_summ |> dplyr::filter(variable == "rho[1]") |> dplyr::pull(postmean)
+    smoothing_data$tau_fixed <- global_fit$post_summ |> dplyr::filter(variable == "tau[1]") |> dplyr::pull(postmean)
   }
   if (fix_subnat_corr){
     if (is.null(global_fit)) {
       stop("fix_subnat_corr was set to TRUE, but a global_fit was not provided.")
     }
-    smoothing_data$rho_correlationeps_fixed <- global_fit$post_summ %>% filter(variable == "rho_correlationeps[1]") %>% pull(postmean)
+    smoothing_data$rho_correlationeps_fixed <- global_fit$post_summ |> dplyr::filter(variable == "rho_correlationeps[1]") |> dplyr::pull(postmean)
   }
 
   # compute info for how to do correlated smoothing
@@ -1001,17 +968,16 @@ fit_model <- function(
     # right ones, in the right order for sources in local fit
     parnames_outlier_hyper_tofix <-  c(parnames_outlier_hyper)
     parname <- "nonse"
-    # to do: check ordering ok here?
-    global_nonse_estimates <- global_fit$post_summ %>%
-      filter(variable_no_index == parname) %>%
-      mutate(data_series_type = global_fit$source_index$data_series_type)
+    global_nonse_estimates <- global_fit$post_summ |>
+      dplyr::filter(variable_no_index == parname) |>
+      dplyr::mutate(data_series_type = global_fit$source_index$data_series_type)
     nonse_data[[paste0(parname, "_fixed")]] <-
       source_index |>
       dplyr::left_join(global_nonse_estimates, by = "data_series_type") |>
       dplyr::pull(postmean)
     # for outliers
     for (parname in parnames_outlier_hyper_tofix){
-      nonse_data[[paste0(parname, "_fixed")]] <- global_fit$post_summ %>% filter(variable == paste0(parname, "[1]")) %>% pull(postmean)
+      nonse_data[[paste0(parname, "_fixed")]] <- global_fit$post_summ |> dplyr::filter(variable == paste0(parname, "[1]")) |> dplyr::pull(postmean)
     }
   }# end fixing dm pars
 
@@ -1037,20 +1003,20 @@ fit_model <- function(
     # geo_unit_subindex <- geo_unit_index[c(area, "c")]
     # required_pop_rows <- tidyr::expand_grid(
     #   year = time_index$year,
-    #   area = geo_unit_subindex[[area]]) %>%
+    #   area = geo_unit_subindex[[area]]) |>
     #   dplyr::left_join(time_index, by="year")
     # colnames(required_pop_rows) <- c(year, area, "t")
-    # required_pop_rows <- required_pop_rows %>%
-    #   dplyr::left_join(geo_unit_subindex, by=area) %>%
+    # required_pop_rows <- required_pop_rows |>
+    #   dplyr::left_join(geo_unit_subindex, by=area) |>
     #   dplyr::left_join(population_data, by = c(year, area))
     # missing_pop_rows <- required_pop_rows |>
     #   dplyr::filter(is.na(population))
     # if (nrow(missing_pop_rows) > 0) {
     #   stop(glue::glue("If there are NAs in column {area}, `population_data` must include population data for all areas and years."))
     # }
-    # geo_unit_pop_wt <- required_pop_rows[c("t", "c", "population")] %>%
-    #   tidyr::pivot_wider(names_from = "t", values_from = "population") %>%
-    #   dplyr::select(-c) %>%
+    # geo_unit_pop_wt <- required_pop_rows[c("t", "c", "population")] |>
+    #   tidyr::pivot_wider(names_from = "t", values_from = "population") |>
+    #   dplyr::select(-c) |>
     #   as.matrix()
     # geo_unit_pop_wt <- sweep(geo_unit_pop_wt, 2, apply(geo_unit_pop_wt, 2, sum), `/`)
 
@@ -1083,20 +1049,20 @@ fit_model <- function(
   } # end subnational
 
   if (add_aggregates){
-    # to do: some checks that we have pop for all regions?
+    # subnational future additions: some checks that we have pop for all regions?
     # else a c problem so this would show up anyway?
-   # stan_data$prop_tr <- matrix(1/nrow(geo_unit_index), nrow = nrow(time_index), ncol = nrow(geo_unit_index))
-    stan_data$prop_tr <- popweights %>%
-      filter(iso == iso_select) %>%
-      select(-iso) %>%
-      left_join(geo_unit_index %>%
-                  select(admin1, c)) %>%
-      left_join(time_index %>%
-                  select(year, t)) %>%
-      arrange(c) %>%
-      select( -c, -t)  %>%
-      pivot_wider(names_from = admin1, values_from = prop) %>%
-      select(-year) %>%
+    # stan_data$prop_tr <- matrix(1/nrow(geo_unit_index), nrow = nrow(time_index), ncol = nrow(geo_unit_index))
+    stan_data$prop_tr <- popweights |>
+      dplyr::filter(iso == iso_select) |>
+      dplyr::select(-iso) |>
+      dplyr::left_join(geo_unit_index |>
+                  dplyr::select(admin1, c)) |>
+      dplyr::left_join(time_index |>
+                  dplyr::select(year, t)) |>
+      dplyr::arrange(c) |>
+      dplyr::select( -c, -t)  |>
+      tidyr::pivot_wider(names_from = admin1, values_from = prop) |>
+      dplyr::select(-year) |>
       as.matrix()
   }
 
@@ -1105,10 +1071,6 @@ fit_model <- function(
     dat_routine <- NULL
     routine_list <- NULL
   } else {
-     # to do 2026/5/11: simplify
-    if (!requireNamespace("brms", quietly = TRUE)) {
-      stop("Package 'brms' is required for this plot. Please install it.", call. = FALSE)
-    }
     #hyper_param <- readRDS(here::here("data_raw/internal/", paste0("routine_hyperparameters_", indicator, ".rds")))
     #hyper_param <- get(paste0("routine_hyperparameters_", indicator))
 
@@ -1138,7 +1100,7 @@ fit_model <- function(
                           service_statistic_df = routine_data,
                           hyper_param = routine_hyperparameters,
                           time_index = time_index,
-                          geo_unit_index = geo_unit_index %>%
+                          geo_unit_index = geo_unit_index |>
                             dplyr::select(any_of(c("iso", "admin1", "c")))
                     )
       dat_routine <- combined_list$dat_routine # to use for plotting
@@ -1152,9 +1114,10 @@ fit_model <- function(
 
 
 
+
   #### reading and loading stan model
   if (is.null(stan_file_path)){
-    stanmodelname <- case_when(
+    stanmodelname <- dplyr::case_when(
       model_name == "rw2" ~ "rw2",
       is.null(routine_data) & !add_aggregates ~ "fpem",
       !is.null(routine_data) & !add_aggregates ~ "fpem_routine",
@@ -1195,17 +1158,24 @@ fit_model <- function(
     }
   }
 
-  # Final check
-  if (stan_file_path == "" || !file.exists(stan_file_path)) {
-    stop(paste0("Could not find Stan file: ", stanmodelname, ".stan\n",
-                "Searched path: ", stan_file_path))
+  # Final check (skip if precompiled model provided)
+  if (is.null(stan_model)) {
+    if (stan_file_path == "" || !file.exists(stan_file_path)) {
+      stop(paste0("Could not find Stan file: ", stanmodelname, ".stan\n",
+                  "Searched path: ", stan_file_path))
+    }
+    print(paste("Using Stan file at:", stan_file_path))
   }
 
-  if (compile_model){
-    stan_model <- compile_model(variational = variational,
-                                nthreads_variational = nthreads_variational,
-                                force_recompile = force_recompile,
-                                stan_file_path = stan_file_path )
+  # Compile or use precompiled model
+  if (!is.null(stan_model)) {
+    # Use provided precompiled model (e.g., from bayescoveragedeploy)
+    print("Using precompiled Stan model")
+  } else if (compile_model) {
+    # Compile model from source
+    stan_model <- compile_model(force_recompile = force_recompile,
+                                stan_file_path = stan_file_path,
+                                backend = backend)
   }
 
 
@@ -1223,9 +1193,111 @@ fit_model <- function(
                  Ptilde_low = Ptilde_low,
                  smoothing_data,
                  nonse_data)
+
+  # Backend-specific fix: rstan (using older Stan 2.21) requires arrays
+  # to have explicit structure and dimension consistency, while cmdstanr (Stan 2.35+)
+  # is more flexible with numeric(0) and automatic type inference
+  if (backend == "rstan") {
+    # Fix matrix variables (Betas is a matrix with k columns)
+    # Matrix dimension must match: nrow = n_terms_fixed, ncol = k
+    if ("Betas_raw_n_terms_fixed" %in% names(stan_data)) {
+      n_terms <- stan_data$Betas_raw_n_terms_fixed
+      if ("Betas_raw_fixed" %in% names(stan_data)) {
+        if (n_terms == 0 || length(stan_data$Betas_raw_fixed) == 0) {
+          stan_data$Betas_raw_fixed <- matrix(numeric(0),
+                                                   nrow = 0,
+                                                   ncol = stan_spline_data$k)
+        } else if (!is.matrix(stan_data$Betas_raw_fixed)) {
+          # Ensure it's a matrix even if only one row
+          stan_data$Betas_raw_fixed <- as.matrix(stan_data$Betas_raw_fixed)
+        }
+      }
+    }
+
+    if ("Betas_n_sigma_fixed" %in% names(stan_data)) {
+      n_sigma <- stan_data$Betas_n_sigma_fixed
+      if ("Betas_sigma_fixed" %in% names(stan_data)) {
+        if (n_sigma == 0 || length(stan_data$Betas_sigma_fixed) == 0) {
+          stan_data$Betas_sigma_fixed <- matrix(numeric(0),
+                                                     nrow = 0,
+                                                     ncol = stan_spline_data$k)
+        } else if (!is.matrix(stan_data$Betas_sigma_fixed)) {
+          stan_data$Betas_sigma_fixed <- as.matrix(stan_data$Betas_sigma_fixed)
+        }
+      }
+    }
+
+    # fix rstan dimensions here
+    # for all in stan_data
+
+    # Fix vector variables (Ptilde, Omega, gamma are vectors)
+    # Vector length must match the corresponding n_terms_fixed or n_sigma_fixed
+    vector_pairs <- list(
+      list(count = "Ptilde_raw_n_terms_fixed", var = "Ptilde_raw_fixed"),
+      list(count = "Ptilde_n_sigma_fixed", var = "Ptilde_sigma_fixed"),
+      list(count = "Omega_raw_n_terms_fixed", var = "Omega_raw_fixed"),
+      list(count = "Omega_n_sigma_fixed", var = "Omega_sigma_fixed"),
+      list(count = "gamma_raw_n_terms_fixed", var = "gamma_raw_fixed"),
+      list(count = "gamma_n_sigma_fixed", var = "gamma_sigma_fixed"),
+      # not in hier data...
+      list(count = "fix_smoothing", var = "rho_fixed"),
+      list(count = "fix_smoothing", var = "tau_fixed"),
+      #array[fix_nonse ? 1 : 0] real<lower=0> sdbias_fixed;
+      list(count = "fix_nonse", var = "sdbias_fixed")#,
+      # need exception if S = 1
+      # array[fix_nonse ? S : 0] real<lower=0> nonse_fixed;
+
+      # add_dataoutliers NOT USED?
+      # list(count = "fix_nonse", var = "nonse_fixed"),
+      #array[add_dataoutliers*fix_nonse ? 1 : 0] real<lower=0> global_shrinkage_dm_fixed;
+      #array[add_dataoutliers*fix_nonse ? 1 : 0] real<lower=0> caux_dm_fixed;
+
+
+    )
+    for (pair in vector_pairs) {
+      count_var <- pair$count
+      data_var <- pair$var
+#      print(pair)
+#      print(count_var)
+
+      if (count_var %in% names(stan_data) && data_var %in% names(stan_data)) {
+        expected_length <- stan_data[[count_var]]
+        actual_data <- stan_data[[data_var]]
+   #     print( stan_data[[count_var]])
+  #      print(stan_data[[data_var]])
+
+        # Case 1: Expected length is 0
+        if (expected_length == 0) {
+          stan_data[[data_var]] <- double(0)
+        }
+        # Case 2: Expected length > 0 but actual data is empty
+        else if (length(actual_data) == 0) {
+          stop("Expected non-empty data for ", data_var, " but got empty. Check the global fit and fixed parameters.")
+        }
+        # Case 3: Ensure proper vector type (convert scalar to vector if needed)
+        else {
+          # This is critical for rstan which distinguishes between scalar and vector[1]
+          # can't use expected lenght for nonse_fixed
+          #  if (data_var != "nonse_fixed"){
+          dim(stan_data[[data_var]]) <- expected_length
+          #  } else {
+
+          #   }
+        }
+      }
+    }
+    # need exception if S = 1
+    # array[fix_nonse ? S : 0] real<lower=0> nonse_fixed;
+
+    if (stan_data$S == 1 & stan_data$fix_nonse ){
+      dim(stan_data$nonse_fixed) <- 1
+    }
+  }
+
   # pass back to user
   result <- list(
     runstep = runstep,
+    backend = backend,  # store backend for wrapper functions
     record_id_fixed_used = data$record_id_fixed, # used to define outliers from 1a, to use in 1b
     # relabeled original data to avoid confusion
     original_data = original_data,
@@ -1242,8 +1314,6 @@ fit_model <- function(
     area = area,
     dat_routine = dat_routine,
     national_dat_df = national_dat_df,
-    # to do: check for more than 1 process
-    # for re-use in (more) local fits
     hierarchical_asymptote = hierarchical_asymptote,
     hierarchical_splines = hierarchical_splines,
     hierarchical_level = hierarchical_level,
@@ -1268,7 +1338,7 @@ fit_model <- function(
               hier_data)
 
 
-  if (compile_model){
+  if (compile_model || !is.null(stan_model)){
     result$stan_model <- stan_model
   }
   if (subnational){
@@ -1278,20 +1348,23 @@ fit_model <- function(
   }
 
   ##### Create an output directory for the model ####
-  save_results <- ifelse(is.null(runname) & runstep %in% c("local_national", "local_subnational"),
-                         FALSE, TRUE)
+  # Determine if we should save results:
+  # Save if: (1) runname is provided, OR
+  #          (2) create_runname_and_outputdir=TRUE AND not a local run
+  # This ensures we only save when we have a valid way to create output_dir
+  save_results <- !is.null(runname) |
+                  (create_runname_and_outputdir & !runstep %in% c("local_national", "local_subnational"))
+
   if (save_results){
     if (create_runname_and_outputdir & is.null(runname)){
       run_type <- if(validation_run == TRUE) "val" else "run"
       # set up directory to store the run
-      runname <- paste0(indicator, "_", runstep, "_", run_type, "_", runnumber,
-                        ifelse(variational, "_variational", ""))
+      runname <- paste0(indicator, "_", runstep, "_", run_type, "_", runnumber)
       output_dir <- get_relative_output_dir(runname)
       while(dir.exists(output_dir) & runnumber < 100) {
         print("output directory already exists, increasing runnumber by 1")
         runnumber <- runnumber + 1
-        runname <- paste0(indicator, "_", runstep, "_", run_type, "_", runnumber,
-                          ifelse(variational, "_variational", ""))
+        runname <- paste0(indicator, "_", runstep, "_", run_type, "_", runnumber)
         output_dir <- get_relative_output_dir(runname)
       }
       if (runnumber == 100){
@@ -1315,15 +1388,19 @@ fit_model <- function(
   if (!add_sample){
     return(result)
   }
-  if (!variational){
-    if (add_inits){
-      init_ll <- lapply(1:chains, function(id) init_fun(chain_id = id, stan_data))
-    } else {
-      init_ll <- NULL
-    }
-    # can try this too
-    #init = function(chain_id) init_fun(chain_id = chain_id, fit$stan_data),
- # return(stan_data)
+  if (add_inits){
+    init_ll <- lapply(1:chains, function(id) {
+      inits <- init_fun(chain_id = id, stan_data)
+      # Fix initialization dimensions for rstan backend
+      fix_init_dims_for_rstan(inits, backend = backend)
+    })
+  } else {
+    init_ll <- NULL
+  }
+
+  # Backend-specific sampling
+  if (backend == "cmdstanr") {
+    # cmdstanr sampling
     fit <- stan_model$sample(
       stan_data,
       save_latent_dynamics = TRUE,
@@ -1339,37 +1416,42 @@ fit_model <- function(
       save_cmdstan_config = TRUE
     )
 
-    result <- c(result,
-                samples = fit)
-  } else {
-    # variational
-    # no longer tested
-    fit_pf <- fit$stan_model$pathfinder(data = fit$stan_data, seed = seed,
-                                        init = function(chain_id) init_fun(chain_id = chain_id, fit$stan_data),
-                                        #init = 0,
-                                        # num_psis_draws = num_psis_draws,
-                                        num_paths= nthreads_variational,
-                                        num_threads = nthreads_variational,
-                                        max_lbfgs_iters = max_lbfgs_iters, # default is 1000
-                                        single_path_draws=50,
-                                        output_dir = results$output_dir,
-                                        history_size = 50
+  } else if (backend == "rstan") {
+    # rstan sampling
+    fit <- rstan::sampling(
+      object = stan_model,
+      data = stan_data,
+      init = init_ll,
+      chains = chains,
+      cores = chains,  # parallel chains
+      iter = iter_sampling + iter_warmup,
+      warmup = iter_warmup,
+      seed = seed,
+      # for testing
+      verbose = TRUE,
+      refresh = refresh,
+      control = list(adapt_delta = adapt_delta,
+                     max_treedepth = max_treedepth)
     )
-    result <- c(result,
-                samples = fit_pf)
+
+  } else {
+    stop("Unknown backend: ", backend)
   }
+
+  # Store the samples
+  result$samples <- fit
 
   result$data <- add_uncertainty_in_obs(result)
   if (runstep %in% "local_subnational"){
     # fix national obs
     # rename NA as national in obs
     # making sure that data are plotted
-    result$data <- result$data %>%
+    result$data <- result$data |>
       # data that were used in fitting
-      mutate(admin1 = ifelse(is.na(admin1), "National", admin1)) %>%
+      dplyr::mutate(admin1 = ifelse(is.na(admin1), "National", admin1)) |>
       # data not used in fitting
-      bind_rows(result$national_dat_df %>%
-                mutate(admin1 = "National", est_indicator = indicator, held_out = 0))
+      dplyr::bind_rows(result$national_dat_df |>
+                dplyr::mutate(admin1 = "National", est_indicator = indicator, held_out = 0))
   }
 
   if (get_posteriors){
@@ -1384,11 +1466,11 @@ fit_model <- function(
     # filter to 2010 onwards in data and estimates
     if (runstep %in%  c("local_national", "local_subnational")){
       result$posteriors$temporal <-
-        result$posteriors$temporal %>%
-          filter(year >= 2010)
+        result$posteriors$temporal |>
+          dplyr::filter(year >= 2010)
       result$data <-
-        result$data %>%
-          filter(year >= 2010)
+        result$data |>
+          dplyr::filter(year >= 2010)
 
     }
     if (save_results)
@@ -1399,7 +1481,7 @@ fit_model <- function(
   }
 
 
-  if (runstep %in% c("step1a", "step1ab", "step1b", "global_subnational") | save_post_summ){
+  if (runstep %in% c("step1a", "step1ab", "step1b", "global_subnational") & save_post_summ){
     result$post_summ <- get_posterior_summaries_andfindpar(result)
     # we may not need this extra saving
     saveRDS(result, file.path(output_dir, paste0(indicator, "_fit_wpostsumm.rds")))

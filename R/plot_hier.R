@@ -59,8 +59,8 @@ plot_hierchecks <- function(fit, model_name = "spline"){
     # muraws suggest not much updating... slightly negative in intercept
     for (k in 1:7){
       p1 = muraw_betas[["plots_allmuraw"]][[k]][[1]] +
-        ggtitle(paste("k = ", k)) +
-        theme(legend.position = "none")
+        ggplot2::ggtitle(paste("k = ", k)) +
+        ggplot2::theme(legend.position = "none")
       p2 = muraw_betas[["plots_allmuraw"]][[k]][[2]]
       p3 = muraw_betas[["plots_allmuraw"]][[k]][[3]]
       p4 = muraw_betas[["plots_allmuraw"]][[k]][[4]]
@@ -89,7 +89,7 @@ plot_hierchecks <- function(fit, model_name = "spline"){
 
   p <- localhierarchy::plot_posterior_summaries_localhierarchy(res = omega)
   for (i in 1:length(p)){
-    print(p[[i]] +  ggtitle(paste0("Omega, ", names(p)[i])))
+    print(p[[i]] +  ggplot2::ggtitle(paste0("Omega, ", names(p)[i])))
   }
 
   if (model_name == "spline") {
@@ -101,11 +101,11 @@ plot_hierchecks <- function(fit, model_name = "spline"){
 
     p <- localhierarchy::plot_posterior_summaries_localhierarchy(res = ptilde)
     for (i in 1:length(p)){
-      print(p[[i]] +  ggtitle(paste0("Ptilde, ", names(p)[i])))
+      print(p[[i]] +  ggplot2::ggtitle(paste0("Ptilde, ", names(p)[i])))
     }
     p <- localhierarchy::plot_posterior_summaries_localhierarchy(res = betas)
     for (i in 1:length(p)){
-      print(p[[i]] +  ggtitle(paste0("Betas, ", names(p)[i])))
+      print(p[[i]] +  ggplot2::ggtitle(paste0("Betas, ", names(p)[i])))
     }
   } else {
     gamma <- localhierarchy::posterior_summary_hierparam_localhierarchy(fit = fit, parname = "gamma",
@@ -113,7 +113,7 @@ plot_hierchecks <- function(fit, model_name = "spline"){
 
     p <- localhierarchy::plot_posterior_summaries_localhierarchy(res = gamma)
     for (i in 1:length(p)){
-      print(p[[i]] +  ggtitle(paste0("gamma, ", names(p)[i])))
+      print(p[[i]] +  ggplot2::ggtitle(paste0("gamma, ", names(p)[i])))
     }
   }
 

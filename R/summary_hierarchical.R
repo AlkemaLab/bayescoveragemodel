@@ -8,8 +8,8 @@ summary_hierarchical <- function(fit){
   pdf(file.path(fit$output_dir, paste0("splinesa.pdf")), width = 12, height = 8)
   for (k in 1:7){
     p <- plots[["summary_plots"]][[k]][[1]] +
-      ggtitle(paste0("Betas mu_raw ", k)) +
-      theme(plot.title = element_text(hjust = 0.5))
+      ggplot2::ggtitle(paste0("Betas mu_raw ", k)) +
+      ggplot2::theme(plot.title = element_text(hjust = 0.5))
     print(p)
   }
   print(plot_prior_post_sigmas(fit = fit, parname = "a"))

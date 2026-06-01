@@ -43,11 +43,11 @@ get_inno_samples <- function(fit) {
   }
 
   # fit$data corresponds with standata$y
-  model_data <- fit$data %>%
+  model_data <- fit$data |>
     tibble::as_tibble()
 
-  obs_yrs <- model_data %>%
-    dplyr::group_by(iso) %>%
+  obs_yrs <- model_data |>
+    dplyr::group_by(iso) |>
     dplyr::summarise(
       min_obs_yr = min(year, na.rm = TRUE),
       max_obs_yr = max(year, na.rm = TRUE)
@@ -55,36 +55,36 @@ get_inno_samples <- function(fit) {
 
   # Use geo_unit_index to get cluster and subcluster info
 
-  iso_codes <- fit$geo_unit_index %>%
+  iso_codes <- fit$geo_unit_index |>
     dplyr::rename(C = c)
 
   # Add name_region if available in data but not in geo_unit_index
   if (!"name_region" %in% names(iso_codes) && "name_region" %in% names(fit$data)) {
-    name_region_lookup <- fit$data %>%
-      dplyr::select(iso, name_region) %>%
+    name_region_lookup <- fit$data |>
+      dplyr::select(iso, name_region) |>
       dplyr::distinct()
-    iso_codes <- iso_codes %>%
+    iso_codes <- iso_codes |>
       dplyr::left_join(name_region_lookup, by = "iso")
   }
 
-  year_index <- fit$time_index %>%
+  year_index <- fit$time_index |>
     dplyr::rename(T = t)
 
   # Extract both epsilon_innovation and eta in a single call (much faster)
-  draws <- fit$samples$draws(c("epsilon_innovation",
-                               "epsilon", "eta")) %>%
+  draws <- extract_draws(fit, c("epsilon_innovation",
+                                "epsilon", "eta")) |>
     tidybayes::spread_draws(epsilon_innovation[C, T], epsilon[C, T],
-                            eta[C, T]) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(-.chain, -.iteration) %>%
-    dplyr::rename(draw = .draw) %>%
-    dplyr::left_join(iso_codes, by = "C") %>%
-    dplyr::left_join(year_index, by = "T") %>%
-    dplyr::left_join(obs_yrs, by = "iso") %>%
+                            eta[C, T]) |>
+    dplyr::ungroup() |>
+    dplyr::select(-.chain, -.iteration) |>
+    dplyr::rename(draw = .draw) |>
+    dplyr::left_join(iso_codes, by = "C") |>
+    dplyr::left_join(year_index, by = "T") |>
+    dplyr::left_join(obs_yrs, by = "iso") |>
     dplyr::filter(year >= min_obs_yr, year <= max_obs_yr)
 
   # Add scale transformations (matches add_probit_scale_columns logic with sd_value = 1)
-  draws <- draws %>%
+  draws <- draws |>
     dplyr::mutate(
       residual = epsilon_innovation,
       level_prop = eta,
@@ -94,7 +94,7 @@ get_inno_samples <- function(fit) {
       y = residual + yhat,
       sd_y_prop = get_se_probitofinvprobitprop(level, sd_y),
       y_prop = probit(y)
-    ) %>%
+    ) |>
     dplyr::select(iso, year,
                   dplyr::any_of(c("cluster", "subcluster", "name_region")),
                   draw, epsilon, eta, sd_y, residual,
@@ -107,7 +107,7 @@ get_inno_samples <- function(fit) {
   if ("subcluster" %in% names(draws)) group_cols <- c(group_cols, "subcluster")
   if ("name_region" %in% names(draws)) group_cols <- c(group_cols, "name_region")
 
-  draws_nested <- draws %>%
+  draws_nested <- draws |>
     tidyr::nest(draws = c(draw, epsilon, eta, sd_y, residual, level, level_prop,
                           yhat, y, sd_y_prop, y_prop))
 

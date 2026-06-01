@@ -1,6 +1,6 @@
 
-#' @import dplyr tidyr tidybayes stringr
 #' @importFrom stats quantile
+#' @importFrom rlang .data
 process_fit <- function(fit, parallel_chains = NULL,
                         add_aggregates  = FALSE,
                         save_eps = FALSE,
@@ -22,15 +22,16 @@ process_fit <- function(fit, parallel_chains = NULL,
         temporal_variables <- c("eta")
 
     }
-    temporal <- fit$samples$summary(
+    temporal <- extract_summary(
+      fit,
       temporal_variables,
       ~ stats::quantile(.x, probs = c(0.025, 0.1, 0.25, 0.5, 0.75, 0.9, 0.975)),
-      .cores = parallel_chains) %>%
-      tidyr::separate(.data$variable, c("variable", "index"), "\\[") %>%
-      dplyr::mutate(index = stringr::str_replace_all(.data$index, "\\]", "")) %>%
-      tidyr::separate(.data$index, c("c", "t"), ",") %>%
-      dplyr::mutate_at(vars(c, t), as.integer) %>%
-      dplyr::left_join(fit$geo_unit_index, by = "c") %>%
+      .cores = parallel_chains) |>
+      tidyr::separate(.data$variable, c("variable", "index"), "\\[") |>
+      dplyr::mutate(index = stringr::str_replace_all(.data$index, "\\]", "")) |>
+      tidyr::separate(.data$index, c("c", "t"), ",") |>
+      dplyr::mutate_at(dplyr::vars(c, t), as.integer) |>
+      dplyr::left_join(fit$geo_unit_index, by = "c") |>
       dplyr::left_join(fit$time_index, by = "t")
     ans <- list(
       temporal = temporal)
@@ -39,21 +40,22 @@ process_fit <- function(fit, parallel_chains = NULL,
   } # end temporal
 
   if (add_aggregates){
-    temporal_agg <- fit$samples$summary(
+    temporal_agg <- extract_summary(
+      fit,
       "aggr",
       ~ stats::quantile(.x, probs = c(0.025, 0.1, 0.25, 0.5, 0.75, 0.9, 0.975)),
-      .cores = parallel_chains) %>%
-      tidyr::separate(.data$variable, c("variable", "index"), "\\[") %>%
-      dplyr::mutate(index = stringr::str_replace_all(.data$index, "\\]", "")) %>%
-      #  tidyr::separate(.data$index, c("c", "t"), ",") %>%
-      rename(t = index) %>%
-      dplyr::mutate_at(vars(t), as.integer) %>%
+      .cores = parallel_chains) |>
+      tidyr::separate(.data$variable, c("variable", "index"), "\\[") |>
+      dplyr::mutate(index = stringr::str_replace_all(.data$index, "\\]", "")) |>
+      #  tidyr::separate(.data$index, c("c", "t"), ",") |>
+      dplyr::rename(t = index) |>
+      dplyr::mutate_at(dplyr::vars(t), as.integer) |>
       dplyr::left_join(fit$time_index, by = "t")
 
     ans$temporal <-
-      bind_rows(ans$temporal,
-                temporal_agg %>%
-                  mutate(admin1 = "National", variable = "eta"))
+      dplyr::bind_rows(ans$temporal,
+                temporal_agg |>
+                  dplyr::mutate(admin1 = "National", variable = "eta"))
 
   }
 
@@ -65,8 +67,8 @@ process_fit <- function(fit, parallel_chains = NULL,
     transition_quantiles <- list()
     for(column in fit$hierarchical_splines) {
       transition[[column]] <- extract_rate_vs_level_subhierarchical(fit, fit$hierarchical_splines, column)
-      transition_quantiles[[column]] <- transition[[column]] %>%
-        dplyr::group_by(.data$name, .data$x) %>%
+      transition_quantiles[[column]] <- transition[[column]] |>
+        dplyr::group_by(.data$name, .data$x) |>
         tidybayes::median_qi(.data$Y, .width = c(0.5, 0.8, 0.95))
     }
 
@@ -94,27 +96,27 @@ process_fit <- function(fit, parallel_chains = NULL,
 
     ar <- NULL
     if(fit$stan_data$smoothing == 1) {
-      ar <- fit$samples$draws(c("rho", "tau")) %>%
-        tidybayes::spread_draws(rho[i], tau[i]) %>%
-        ungroup() %>%
+      ar <- extract_draws(fit, c("rho", "tau")) |>
+        tidybayes::spread_draws(rho[i], tau[i]) |>
+        dplyr::ungroup() |>
         dplyr::select(-.data$i)
     }
 
     #
     # Hierarchical distributions
     #
-    Ptilde_sigma <- fit$samples$draws(c("Ptilde_sigma")) %>%
+    Ptilde_sigma <- extract_draws(fit, c("Ptilde_sigma")) |>
       tidybayes::spread_draws(Ptilde_sigma[i])
-    Omega_sigma <- fit$samples$draws(c("Omega_sigma")) %>%
+    Omega_sigma <- extract_draws(fit, c("Omega_sigma")) |>
       tidybayes::spread_draws(Omega_sigma[i])
-    a_sigma <- fit$samples$draws(c("a_sigma")) %>%
+    a_sigma <- extract_draws(fit, c("a_sigma")) |>
       tidybayes::spread_draws(a_sigma[i, j])
 
     #
     # Data model
     #
-    nonse <- fit$samples$draws("nonse") %>%
-      tidybayes::spread_draws(nonse[source]) %>%
+    nonse <- extract_draws(fit, "nonse") |>
+      tidybayes::spread_draws(nonse[source]) |>
       dplyr::left_join(fit$source_index, by = "source")
 
 
@@ -133,16 +135,16 @@ process_fit <- function(fit, parallel_chains = NULL,
     #
     # Generated quantities
     #
-    generated_quantities <- fit$samples$draws(c("pit", "resid", "y_pred")) %>%
+    generated_quantities <- extract_draws(fit, c("pit", "resid", "y_pred")) |>
       tidybayes::spread_draws(pit[i], resid[i], y_pred[i])
     ans <- c(ans,
              list(
                generated_quantities = generated_quantities
              ))
     if (!just_one_indicator ){
-      d_generated_quantities <- fit$samples$draws(c("d_pit", "d_resid", "d_y_pred")) %>%
-        tidybayes::spread_draws(d_pit[i], d_resid[i], d_y_pred[i]) %>%
-        rename(pit = d_pit, resid = d_resid, y_pred = d_y_pred)
+      d_generated_quantities <- extract_draws(fit, c("d_pit", "d_resid", "d_y_pred")) |>
+        tidybayes::spread_draws(d_pit[i], d_resid[i], d_y_pred[i]) |>
+        dplyr::rename(pit = d_pit, resid = d_resid, y_pred = d_y_pred)
       ans <- c(ans,
                list(
                  d_generated_quantities = d_generated_quantities
@@ -153,7 +155,6 @@ process_fit <- function(fit, parallel_chains = NULL,
   ans
 }
 
-#' @import dplyr
 #' @importFrom tidybayes median_qi spread_draws
 #' @importFrom stats plogis
 #' @importFrom rlang .data
@@ -162,34 +163,34 @@ extract_rate_vs_level_subhierarchical <- function(fit, f, subhierarchy, constrai
 ) {
   hierarchical_a <- hierarchical_data(fit$geo_unit_index, f)
 
-  start <- hierarchical_a$model_matrix$index %>%
-    dplyr::filter(.data$column == subhierarchy) %>%
-    dplyr::pull(i) %>%
+  start <- hierarchical_a$model_matrix$index |>
+    dplyr::filter(.data$column == subhierarchy) |>
+    dplyr::pull(i) |>
     min()
 
-  end <- hierarchical_a$model_matrix$index %>%
-    dplyr::filter(.data$column == subhierarchy) %>%
-    dplyr::pull(i) %>%
+  end <- hierarchical_a$model_matrix$index |>
+    dplyr::filter(.data$column == subhierarchy) |>
+    dplyr::pull(i) |>
     max()
 
   B <- fit$stan_data$B
 
   num_constrained_zero <- fit$stan_data$spline_degree + 1
 
-  a_star <- fit$samples$draws(c("a_star")) %>%
+  a_star <- extract_draws(fit, c("a_star")) |>
       tidybayes::spread_draws(a_star[j, i])
 
-  a_star <- a_star %>%
-    dplyr::group_by(.data$i, .data$.chain, .data$.iteration, .data$.draw) %>%
+  a_star <- a_star |>
+    dplyr::group_by(.data$i, .data$.chain, .data$.iteration, .data$.draw) |>
     dplyr::summarize(a_star =  list(.data[["a_star"]]))
 
-  # tidyr::nest() %>%
-  # dplyr::mutate(a_star = map(.data$data, `[[`, "a_star")) %>%
+  # tidyr::nest() |>
+  # dplyr::mutate(a_star = map(.data$data, `[[`, "a_star")) |>
   # dplyr::select(-.data$data)
 
   # example from 1 param function
-  # tidyr::nest() %>%
-  #   dplyr::mutate(star = map(.data$data, `[[`, glue::glue("{x}_star"))) %>%
+  # tidyr::nest() |>
+  #   dplyr::mutate(star = map(.data$data, `[[`, glue::glue("{x}_star"))) |>
   #   dplyr::select(-.data$data)
   #
   # dplyr::summarize(
@@ -202,8 +203,8 @@ extract_rate_vs_level_subhierarchical <- function(fit, f, subhierarchy, constrai
   for(i in 1:nrow(uniq)) {
     index <- rep(0, hierarchical_a$n_terms)
     index[1:end] <- uniq[i, 1:end]
-    title <- hierarchical_a$model_matrix$index %>%
-      dplyr::filter(i == last(which(index == 1))) %>%
+    title <- hierarchical_a$model_matrix$index |>
+      dplyr::filter(i == last(which(index == 1))) |>
       dplyr::pull(.data$level)
     titles <- c(titles, title)
 
@@ -214,41 +215,41 @@ extract_rate_vs_level_subhierarchical <- function(fit, f, subhierarchy, constrai
 
   tmp_function_summ <- function(data) {
     if(constrain_zero == "after") {
-      tibble::tibble(x = fit$stan_data$grid, Y = t(c(data$value, rep(0, num_constrained_zero)) %*% B)[,1]) %>%
+      tibble::tibble(x = fit$stan_data$grid, Y = t(c(data$value, rep(0, num_constrained_zero)) %*% B)[,1]) |>
         dplyr::filter(.data$x >= 0 & .data$x <= 1)
     }
     else {
-      tibble::tibble(x = fit$stan_data$grid, Y = t(c(rep(0, num_constrained_zero), data$value) %*% B)[,1]) %>%
+      tibble::tibble(x = fit$stan_data$grid, Y = t(c(rep(0, num_constrained_zero), data$value) %*% B)[,1]) |>
         dplyr::filter(.data$x >= 0 & .data$x <= 1)
     }
   }
 
-  a_star <- a_star %>%
-    tidyr::pivot_longer(cols = all_of(titles)) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(-.data$a_star) %>%
-    dplyr::group_by(.data$.chain, .data$.iteration, .data$.draw, .data$name) %>%
-    # tidyr::nest() %>%
+  a_star <- a_star |>
+    tidyr::pivot_longer(cols = tidyr::all_of(titles)) |>
+    dplyr::ungroup() |>
+    dplyr::select(-.data$a_star) |>
+    dplyr::group_by(.data$.chain, .data$.iteration, .data$.draw, .data$name) |>
+    # tidyr::nest() |>
     # dplyr::mutate(Y = map(.data$data, function(data) {
     #   if(constrain_zero == "after") {
-    #     tibble::tibble(x = fit$stan_data$grid, Y = t(c(data$value, rep(0, num_constrained_zero)) %*% B)[,1]) %>%
+    #     tibble::tibble(x = fit$stan_data$grid, Y = t(c(data$value, rep(0, num_constrained_zero)) %*% B)[,1]) |>
     #       dplyr::filter(.data$x >= 0 & .data$x <= 1)
     #   }
     #   else {
-    #     tibble::tibble(x = fit$stan_data$grid, Y = t(c(rep(0, num_constrained_zero), data$value) %*% B)[,1]) %>%
+    #     tibble::tibble(x = fit$stan_data$grid, Y = t(c(rep(0, num_constrained_zero), data$value) %*% B)[,1]) |>
     #       dplyr::filter(.data$x >= 0 & .data$x <= 1)
     #   }
-    # }))  %>%
-  # dplyr::ungroup() %>%
-  # dplyr::select(-.data$data, -.data$.draw) %>%
+    # }))  |>
+  # dplyr::ungroup() |>
+  # dplyr::select(-.data$data, -.data$.draw) |>
   # tidyr::unnest(.data$Y)
 
   dplyr::summarize(
-    Y = list(tmp_function_summ(.data)))  %>%
+    Y = list(tmp_function_summ(.data)))  |>
     tidyr::unnest(.data$Y)
   # example from 1 param function
-  # tidyr::nest() %>%
-  #   dplyr::mutate(star = map(.data$data, `[[`, glue::glue("{x}_star"))) %>%
+  # tidyr::nest() |>
+  #   dplyr::mutate(star = map(.data$data, `[[`, glue::glue("{x}_star"))) |>
   #   dplyr::select(-.data$data)
   #
   # dplyr::summarize(

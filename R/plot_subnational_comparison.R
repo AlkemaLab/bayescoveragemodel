@@ -9,36 +9,36 @@ plot_subnational_comparison <- function(results,
 
   if (is.null(results_woroutine)){
     results_all <- results$posteriors$temporal|>
-      mutate(model = model_names[1])
+      dplyr::mutate(model = model_names[1])
   } else {
     results_all <- results$posteriors$temporal |>
-          mutate(model = model_names[1]) |>
+          dplyr::mutate(model = model_names[1]) |>
       dplyr::bind_rows(
         results_woroutine$posteriors$temporal |>
-          mutate(model = model_names[2]))
+          dplyr::mutate(model = model_names[2]))
   }
   res <- results_all |>
     dplyr::filter(year == year_select) |>
     # dplyr::mutate(
     #   region_code = factor(admin1) |>
     #     forcats::fct_relevel("National") |>
-    #     forcats::fct_rev()) %>%
-    rename(median = '50%')
+    #     forcats::fct_rev()) |>
+    dplyr::rename(median = '50%')
   # remove national
   res <- res |>
     dplyr::filter(admin1 != "National")
   # clean names
   # if !  _ in admin1, then region_code is admin1
-  if (!all(str_detect(res$admin1, "_"))){
+  if (!all(stringr::str_detect(res$admin1, "_"))){
     res$region_code <- res$admin1
   } else {
     # otherwise split by _ and take second part
-    res$region_code <- map_chr(str_split(res$admin1, "_"), function(l) l[2])
+    res$region_code <- purrr::map_chr(stringr::str_split(res$admin1, "_"), function(l) l[2])
   }
 
   if (arrange_point){
     res <-  res |>
-      mutate(region_code = fct_reorder(region_code, median))
+      dplyr::mutate(region_code = fct_reorder(region_code, median))
   }
   res |>
     ggplot2::ggplot(ggplot2::aes(x = region_code, y = median,
@@ -67,22 +67,22 @@ plot_subnational_comparison_acrossyears <- function(results,
   results_all <- results$posteriors$temporal
   res <- results_all |>
     dplyr::filter(year %in% year_select) |>
-    rename(median = '50%')
+    dplyr::rename(median = '50%')
   # remove national
   res <- res |>
     dplyr::filter(admin1 != "National")
   # clean names
   # if !  _ in admin1, then region_code is admin1
-  if (!all(str_detect(res$admin1, "_"))){
+  if (!all(stringr::str_detect(res$admin1, "_"))){
     res$region_code <- res$admin1
   } else {
     # otherwise split by _ and take second part
-    res$region_code <- map_chr(str_split(res$admin1, "_"), function(l) l[2])
+    res$region_code <- purrr::map_chr(stringr::str_split(res$admin1, "_"), function(l) l[2])
   }
 
   if (arrange_point){
     res <-  res |>
-      mutate(region_code = fct_reorder(region_code, median))
+      dplyr::mutate(region_code = fct_reorder(region_code, median))
   }
   res |>
     ggplot2::ggplot(ggplot2::aes(x = region_code, y = median,
