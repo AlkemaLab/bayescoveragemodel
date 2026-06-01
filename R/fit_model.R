@@ -167,7 +167,6 @@
 #'   current fit must also have been included in the `data` used for the
 #'   `global_fit`.
 #'
-#' @importFrom cmdstanr cmdstan_model write_stan_file
 #' @importFrom tibble tibble
 #' @importFrom splines bs
 #' @import dplyr
