@@ -34,7 +34,7 @@ add_uncertainty_in_obs <- function(fit, perc_low = 0.025, perc_up = 0.975){
   simulated_samples <- matrix(NA, nrow = n_rows, ncol = n_simulations)
   set.seed(12345)
   for (i in 1:n_rows) {
-    # to do: define transform for obs function!
+    # general code improvement: define transform for obs function!
     #simulated_samples[i, ] <- inv_logit(rnorm(
     simulated_samples[i, ] <- probit(rnorm(
         n = n_simulations,

@@ -157,7 +157,7 @@ identify_outliers_in_global_fit <- function(fit){
   #                                 # for step 2
   #                                 add_trad = FALSE)
   # }
-  # to do: replace with eta_i stuff later
+  # general code improvement: replace with eta_i stuff later
   res <- fit$posteriors$temporal %>%
     dplyr::select(variable, c, t, '50%', iso, year) %>%
     tidyr::pivot_wider(names_from = variable, values_from = '50%')

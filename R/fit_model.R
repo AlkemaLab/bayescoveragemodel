@@ -300,7 +300,7 @@ fit_model <- function(
 
   ###### What type of run is this, and what settings do we need? #####
   # if runstep is step1a, we use the defaults
-  # to do: finish subnational, settings here
+  # for subnational future additions, settings here
   subnational = FALSE
   population_data = NULL
   area = "iso"
@@ -366,7 +366,7 @@ fit_model <- function(
     }
 
     print("We use a global fit, and take selected settings from there.")
-    # minor to do: print these settings?
+    # general code improvement: print these settings?
     print("settings for the spline_degree and num_knots taken from global run")
     spline_degree <- global_fit$spline_degree
     num_knots <- global_fit$num_knots
@@ -579,43 +579,6 @@ fit_model <- function(
       stop("The top levels of hierarchical_splines must match the levels that were used for the global fit.")
     }
 
-    # check that hierarchical terms and sigmas to fix are all contained at the
-    # top of the levels in the hierarchy used in the global fit
-    # to do: need to update checks...
-    # if (#!all(hierarchical_asymptote_sigmas_fixed %in% global_fit$hierarchical_asymptote) ||
-    #     !all(hierarchical_asymptote_terms_fixed %in% global_fit$hierarchical_asymptote)) {
-    #   stop("Hierarchical estimates to fix for hierarchical_asymptote were not estimated in the global fit.")
-    # }
-    # if (#!all(hierarchical_asymptote_sigmas_fixed == global_fit$hierarchical_asymptote[seq_along(hierarchical_asymptote_sigmas_fixed)]) ||
-    #     !all(hierarchical_asymptote_terms_fixed == global_fit$hierarchical_asymptote[seq_along(hierarchical_asymptote_terms_fixed)])) {
-    #   stop("Hierarchical estimates to fix for hierarchical_asymptote do not match the highest hierarchical_asymptote levels estimated in the global fit.")
-    # }
-    #
-    # if (#!all(hierarchical_level_sigmas_fixed %in% global_fit$hierarchical_level) ||
-    #     !all(hierarchical_level_terms_fixed %in% global_fit$hierarchical_level)) {
-    #   stop("Hierarchical estimates to fix for hierarchical_level were not estimated in the global fit.")
-    # }
-    # if (#!all(hierarchical_level_sigmas_fixed == global_fit$hierarchical_level[seq_along(hierarchical_level_sigmas_fixed)]) ||
-    #     !all(hierarchical_level_terms_fixed == global_fit$hierarchical_level[seq_along(hierarchical_level_terms_fixed)])) {
-    #   stop("Hierarchical estimates to fix for hierarchical_level do not match the highest hierarchical_level levels estimated in the global fit.")
-    # }
-    #
-    # if (#!all(hierarchical_splines_sigmas_fixed %in% global_fit$hierarchical_splines) ||
-    #     !all(hierarchical_splines_terms_fixed %in% global_fit$hierarchical_splines)) {
-    #   stop("Hierarchical estimates to fix for hierarchical_splines were not estimated in the global fit.")
-    # }
-    # if (#!all(hierarchical_splines_sigmas_fixed == global_fit$hierarchical_splines[seq_along(hierarchical_splines_sigmas_fixed)]) ||
-    #     !all(hierarchical_splines_terms_fixed == global_fit$hierarchical_splines[seq_along(hierarchical_splines_terms_fixed)])) {
-    #   stop("Hierarchical estimates to fix for hierarchical_splines do not match the highest hierarchical_splines levels estimated in the global fit.")
-    # }
-
-    # It is not valid to fix terms at a given hierarchy level without also fixing
-    # the sigma estimate at that hierarchy level.
-    # For example, if x = mu + z * sigma,
-    # it does not make sense to fix z without also fixing sigma.
-    # on the other hand, we might fix sigma but not z if we want to borrow information
-    # about variability from global fit, but the global fit didn't produce an estimate
-    # of z for the geo unit we're interested in, or we are ok with re-estimating it?
     if (!all(hierarchical_asymptote_terms_fixed %in% hierarchical_asymptote_sigmas_fixed)) {
       stop("All values of hierarchical_asymptote_terms_fixed must also be contained in hierarchical_asymptote_sigmas_fixed")
     }
@@ -909,7 +872,6 @@ fit_model <- function(
 
   # if there are maxes for a sigma, update to get max for that sigma
   if (!is.null(global_fit)){
-    # to do: decide whether to use
     hier_stan_data_sigmamax <- list(
       Ptilde_sigma_max = min(hier_stan_data$Ptilde_sigma_fixed),
       Omega_sigma_max = min(hier_stan_data$Omega_sigma_fixed),
@@ -1008,7 +970,6 @@ fit_model <- function(
     # right ones, in the right order for sources in local fit
     parnames_outlier_hyper_tofix <-  c(parnames_outlier_hyper)
     parname <- "nonse"
-    # to do: check ordering ok here?
     global_nonse_estimates <- global_fit$post_summ %>%
       filter(variable_no_index == parname) %>%
       mutate(data_series_type = global_fit$source_index$data_series_type)
@@ -1090,9 +1051,9 @@ fit_model <- function(
   } # end subnational
 
   if (add_aggregates){
-    # to do: some checks that we have pop for all regions?
+    # subnational future additions: some checks that we have pop for all regions?
     # else a c problem so this would show up anyway?
-   # stan_data$prop_tr <- matrix(1/nrow(geo_unit_index), nrow = nrow(time_index), ncol = nrow(geo_unit_index))
+    # stan_data$prop_tr <- matrix(1/nrow(geo_unit_index), nrow = nrow(time_index), ncol = nrow(geo_unit_index))
     stan_data$prop_tr <- popweights %>%
       filter(iso == iso_select) %>%
       select(-iso) %>%
@@ -1112,9 +1073,8 @@ fit_model <- function(
     dat_routine <- NULL
     routine_list <- NULL
   } else {
-     # to do 2026/5/11: simplify
     if (!requireNamespace("brms", quietly = TRUE)) {
-      stop("Package 'brms' is required for this plot. Please install it.", call. = FALSE)
+      stop("Package 'brms' is required. Please install it.", call. = FALSE)
     }
     #hyper_param <- readRDS(here::here("data_raw/internal/", paste0("routine_hyperparameters_", indicator, ".rds")))
     #hyper_param <- get(paste0("routine_hyperparameters_", indicator))
@@ -1359,8 +1319,6 @@ fit_model <- function(
     area = area,
     dat_routine = dat_routine,
     national_dat_df = national_dat_df,
-    # to do: check for more than 1 process
-    # for re-use in (more) local fits
     hierarchical_asymptote = hierarchical_asymptote,
     hierarchical_splines = hierarchical_splines,
     hierarchical_level = hierarchical_level,

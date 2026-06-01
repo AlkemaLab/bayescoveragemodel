@@ -41,7 +41,7 @@ plot_estimates_local_all <- function(results,
   # Get unique country or subnational codes
   model_country_codes <- results$posteriors$temporal[[geo_col]] %>% unique()
 
-  # TO DO: update for subnational
+  # subnational future additions
   if(!is.null(dat_routine)){
     routine_country_codes <- dat_routine %>% pull(!!sym(geo_col)) %>% unique()
     plot_name <- paste0(plot_name, "_wroutinedata")

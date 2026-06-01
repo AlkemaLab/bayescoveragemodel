@@ -51,17 +51,9 @@ process_data <- function(dat,
     dat <- dat %>% filter(!is.na(cluster))
   }
 
-  print("Minor TO DO: Figure out exact reference years, ie different reference period for anc4.")
-  # 2026 data has column year only
-  # print("Right now, we delete column year and rename final_year as year, to take forward")
-  # dat <- dat %>%
-  #   dplyr::select(-year) %>%
-  #   rename(year = final_year)
-
   # check SEs, any missing?
   if (any(is.na(dat$se))){
     print("Some SEs are NA, these observations are excluded for now.")
-    print("TO DO: add imputation for missing SEs.")
     dat <- dat %>% filter(!is.na(se))
   }
 
