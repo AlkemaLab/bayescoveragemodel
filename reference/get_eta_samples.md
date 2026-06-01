@@ -14,8 +14,8 @@ get_eta_samples(fit, year_select = 2023, countryyear_select = NULL)
 
 - fit:
 
-  A fitted model object containing `samples` (cmdstanr draws),
-  `geo_unit_index`, `time_index`, `stan_data`, and `data`.
+  A fitted model object containing `samples` (cmdstanr or rstan fit
+  object), `geo_unit_index`, `time_index`, `stan_data`, and `data`.
 
 - year_select:
 

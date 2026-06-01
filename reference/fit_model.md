@@ -39,10 +39,12 @@ fit_model(
   held_out = FALSE,
   validation_cutoff_year = NULL,
   validation_run = FALSE,
-  save_post_summ = FALSE,
+  save_post_summ = TRUE,
   generate_quantities = TRUE,
   get_posteriors = TRUE,
   stan_file_path = NULL,
+  stan_model = NULL,
+  backend = c("cmdstanr", "rstan"),
   create_runname_and_outputdir = TRUE,
   runnumber = 1,
   rungroup = NULL,
@@ -57,8 +59,6 @@ fit_model(
   refresh = 10,
   adapt_delta = 0.9,
   max_treedepth = 14,
-  variational = FALSE,
-  nthreads_variational = 8,
   add_inits = TRUE
 )
 ```
@@ -188,6 +188,11 @@ fit_model(
 
   boolean indicator of whether it's a validation model run or not
 
+- save_post_summ:
+
+  boolean indicator of whether to save summary object (does NOT work for
+  rstan backend)
+
 - generate_quantities:
 
   binary vector indicating whether to simulate data from the fitted
@@ -200,6 +205,21 @@ fit_model(
 - stan_file_path:
 
   stan file path (if NULL, uses internal stan file)
+
+- stan_model:
+
+  precompiled Stan model object (if NULL, model will be compiled from
+  stan_file_path). Used by bayescoveragedeploy to pass precompiled
+  models for users without C++ compilers.
+
+- backend:
+
+  character string specifying the Stan backend to use. Options are:
+
+  - `"cmdstanr"` (default): Use cmdstanr interface (recommended, modern)
+
+  - `"rstan"`: Use rstan interface (legacy, may be required for some
+    workflows)
 
   Setting for where to save things
 
@@ -260,15 +280,6 @@ fit_model(
 - max_treedepth:
 
   maximum tree depth for the No-U-Turn Sampler
-
-- variational:
-
-  boolean indicator of whether to use variational inference (not yet
-  tested)
-
-- nthreads_variational:
-
-  number of threads to use for variational inference
 
 - add_inits:
 

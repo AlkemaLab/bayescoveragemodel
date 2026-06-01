@@ -11,11 +11,15 @@
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/add_probit_scale_columns.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/add_uncertainty_in_obs.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/assign_outliers.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/backend_wrappers.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/backtransform_residuals.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/compare_fits.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/explore_data.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/extract_draws.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/extract_summary.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/fit_model.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/fit_routine.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/fix_init_dims_for_rstan.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_convergence_diagnostics.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_eta_samples.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_fit.html</loc></url>
@@ -37,6 +41,8 @@
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_sba.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_vdpt.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_vmsl.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/has_cmdstanr.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/has_rstan.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/identify_outliers_in_global_fit.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/index.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/inv_probit.html</loc></url>
