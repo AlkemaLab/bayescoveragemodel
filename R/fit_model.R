@@ -643,7 +643,7 @@ fit_model <- function(
     #if (column == area) {
     #  check_nas_or_pops(data, column, year, population_data)
     #} else {
-    check_nas(data, column)
+    localhierarchy::check_nas(data, column)
     #}
   }
 
@@ -700,13 +700,13 @@ fit_model <- function(
 
   ## all data checks and imputation related to NAs
   # Make sure there are no NAs in supplied columns
-  check_nas(data, year)
-  check_nas(data, source)
+  localhierarchy::check_nas(data, year)
+  localhierarchy::check_nas(data, source)
 
   # maybe less relevant for 1 indicator...
   # create obs_isNA
   obs_isNA <- is.na(data[[y]])
-  check_nas(data[!obs_isNA, ], se)
+  localhierarchy::check_nas(data[!obs_isNA, ], se)
   # impute arbitrary numbers to avoid NA issues?
   data[[y]][obs_isNA] <- 100
   data[[se]][obs_isNA] <- 100
@@ -835,8 +835,8 @@ fit_model <- function(
   stan_data[[paste0(parname, "_prior_sd_sigma_estimate")]] <- 1
 
   hier_data <- hier_stan_data  <- list()
-  hier_data[["Ptilde_data"]] <- hierarchical_data(geo_unit_index, hierarchical_asymptote)
-  hier_stan_data[["Ptilde"]] <- hierarchical_param_stan_data(
+  hier_data[["Ptilde_data"]] <- localhierarchy::hierarchical_data(geo_unit_index, hierarchical_asymptote)
+  hier_stan_data[["Ptilde"]] <- localhierarchy::hierarchical_param_stan_data(
     global_fit = global_fit,
     param_name = "Ptilde",
     param_data = hier_data[["Ptilde_data"]],
@@ -849,8 +849,8 @@ fit_model <- function(
   stan_data[[paste0(parname, "_scalarprior_mean")]] <- 0
   stan_data[[paste0(parname, "_prior_sd_sigma_estimate")]] <- 1
 
-  hier_data[["Omega_data"]] <- hierarchical_data(geo_unit_index, hierarchical_level)
-  hier_stan_data[["Omega"]] <- hierarchical_param_stan_data(
+  hier_data[["Omega_data"]] <- localhierarchy::hierarchical_data(geo_unit_index, hierarchical_level)
+  hier_stan_data[["Omega"]] <- localhierarchy::hierarchical_param_stan_data(
     global_fit = global_fit,
     param_name ="Omega",
     param_data = hier_data[["Omega_data"]],
@@ -866,10 +866,10 @@ fit_model <- function(
 
   # for rw2
   if (model_name == "rw2"){
-    hier_data[["gamma_data"]] <- hierarchical_data(geo_unit_index,
+    hier_data[["gamma_data"]] <- localhierarchy::hierarchical_data(geo_unit_index,
                                                    # use hier from splines
                                                    hierarchical_splines)
-    hier_stan_data[["gamma"]] <- hierarchical_param_stan_data(
+    hier_stan_data[["gamma"]] <- localhierarchy::hierarchical_param_stan_data(
       global_fit = global_fit,
       param_name ="gamma",
       param_data = hier_data[["gamma_data"]],
@@ -891,9 +891,9 @@ fit_model <- function(
 
     # k is being calculated somewhere.... replaces this
     stan_data[["Betas_k_terms"]] <- stan_spline_data[["k"]]
-    hier_data[["Betas_data"]] <- hierarchical_data(geo_unit_index, hierarchical_splines)
+    hier_data[["Betas_data"]] <- localhierarchy::hierarchical_data(geo_unit_index, hierarchical_splines)
 
-    hier_stan_data[["Betas"]] <- hierarchical_param_stan_data(
+    hier_stan_data[["Betas"]] <- localhierarchy::hierarchical_param_stan_data(
       global_fit = global_fit,
       param_name = "Betas",
       param_data = hier_data[["Betas_data"]],

@@ -201,7 +201,7 @@ test_fitting <- function() {
   return(list(results = results, fits = fits))
 }
 
-library(localhierarchy)
+#library(localhierarchy)
 devtools::load_all(here::here())
 rstan_options(auto_write = TRUE)
 fitting_results <- test_fitting()
