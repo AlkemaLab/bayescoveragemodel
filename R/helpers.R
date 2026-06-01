@@ -1,32 +1,32 @@
 
 make_val_table_region <- function(valresults){
-  valresults %>%
-    dplyr::mutate(dplyr::across(-c("n_left_out", "name_region"), ~ round(100*.x, 0))) %>%
-    rename(nobs = n_left_out, MedE = med_error, MedAE = med_abs_error,
-           CI95width = avg_interval_width) %>%
-    dplyr::select(-med_abs_rel_error, -med_rel_error) %>%
-    rename(data_subset = name_region) %>%
-    dplyr::select(data_subset, everything())
+  valresults |>
+    dplyr::mutate(dplyr::across(-c("n_left_out", "name_region"), ~ round(100*.x, 0))) |>
+    dplyr::rename(nobs = n_left_out, MedE = med_error, MedAE = med_abs_error,
+           CI95width = avg_interval_width) |>
+    dplyr::select(-med_abs_rel_error, -med_rel_error) |>
+    dplyr::rename(data_subset = name_region) |>
+    dplyr::select(data_subset, dplyr::everything())
 }
 
 make_val_table <- function(valresults){
-  valresults %>%
-    dplyr::mutate(dplyr::across(-c("n_left_out"), ~ round(100*.x, 0))) %>%
-    rename(nobs = n_left_out, MedE = med_error, MedAE = med_abs_error,
-           CI95width = avg_interval_width) %>%
-    dplyr::select(-med_abs_rel_error, -med_rel_error) %>%
-    mutate(data_subset = "All") %>%
-    dplyr::select(data_subset, everything())
+  valresults |>
+    dplyr::mutate(dplyr::across(-c("n_left_out"), ~ round(100*.x, 0))) |>
+    dplyr::rename(nobs = n_left_out, MedE = med_error, MedAE = med_abs_error,
+           CI95width = avg_interval_width) |>
+    dplyr::select(-med_abs_rel_error, -med_rel_error) |>
+    dplyr::mutate(data_subset = "All") |>
+    dplyr::select(data_subset, dplyr::everything())
 }
 
 make_val_table_datatype <- function(valresults){
-  valresults %>%
-    dplyr::mutate(dplyr::across(-c("n_left_out", "data_series_type"), ~ round(100*.x, 0))) %>%
-    rename(nobs = n_left_out, MedE = med_error, MedAE = med_abs_error,
-           CI95width = avg_interval_width) %>%
-    dplyr::select(-med_abs_rel_error, -med_rel_error) %>%
-    rename(data_subset = data_series_type) %>%
-    dplyr::select(data_subset, everything())
+  valresults |>
+    dplyr::mutate(dplyr::across(-c("n_left_out", "data_series_type"), ~ round(100*.x, 0))) |>
+    dplyr::rename(nobs = n_left_out, MedE = med_error, MedAE = med_abs_error,
+           CI95width = avg_interval_width) |>
+    dplyr::select(-med_abs_rel_error, -med_rel_error) |>
+    dplyr::rename(data_subset = data_series_type) |>
+    dplyr::select(data_subset, dplyr::everything())
 }
 
 logit <- function(x) log(x/(1-x))
@@ -87,7 +87,7 @@ get_fit <- function(indicator, runstep, folder_suffix) {
   }
 
   fit <- readRDS(file_path)
-  fit$output_dir <- file.path(here::here() %>% dirname(), "bayestransition_output", runname)
+  fit$output_dir <- file.path(here::here() |> dirname(), "bayestransition_output", runname)
 
   return(fit)
 }

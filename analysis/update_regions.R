@@ -16,32 +16,32 @@ regions_dat <- read_csv(here::here(data_folder, "regions.csv"),
 
 # Check current values for Vietnam and Mongolia
 cat("Current values for Vietnam:\n")
-regions_dat %>%
-  filter(iso == "VNM") %>%
-  select(iso, name_country, cluster, subcluster) %>%
+regions_dat |>
+  filter(iso == "VNM") |>
+  select(iso, name_country, cluster, subcluster) |>
   print()
 
 cat("\nCurrent values for Mongolia:\n")
-regions_dat %>%
-  filter(iso == "MNG") %>%
-  select(iso, name_country, cluster, subcluster) %>%
+regions_dat |>
+  filter(iso == "MNG") |>
+  select(iso, name_country, cluster, subcluster) |>
   print()
 
 # Update regions data
-regions_updated <- regions_dat %>%
+regions_updated <- regions_dat |>
   # (1) Rename existing cluster and subcluster columns to add "_bearak" suffix
   rename(
     cluster_bearak = cluster,
     subcluster_bearak = subcluster
-  ) %>%
+  ) |>
   # (2) Create new cluster and subcluster columns with modifications
 
   mutate(
-    cluster = case_when(
+    cluster = dplyr::case_when(
       iso == "VNM" ~ "South Asia, Southeast Asia, and Oceania",
       TRUE ~ cluster_bearak
     ),
-    subcluster = case_when(
+    subcluster = dplyr::case_when(
       iso == "VNM" ~ "Southeast Asia",
       iso == "MNG" ~ "Central Asia",
       # add countries in South America in that subccluster
@@ -52,23 +52,23 @@ regions_updated <- regions_dat %>%
 
 # Verify changes
 cat("\nUpdated values for Vietnam:\n")
-regions_updated %>%
-  filter(iso == "VNM") %>%
-  select(iso, name_country, cluster_bearak, cluster, subcluster_bearak, subcluster) %>%
+regions_updated |>
+  filter(iso == "VNM") |>
+  select(iso, name_country, cluster_bearak, cluster, subcluster_bearak, subcluster) |>
   print()
 
 cat("\nUpdated values for Mongolia:\n")
-regions_updated %>%
-  filter(iso == "MNG") %>%
-  select(iso, name_country, cluster_bearak, cluster, subcluster_bearak, subcluster) %>%
+regions_updated |>
+  filter(iso == "MNG") |>
+  select(iso, name_country, cluster_bearak, cluster, subcluster_bearak, subcluster) |>
   print()
 
 # subclusters for countries in LAC:
 
 cat("\nSubclusters for countries in LAC:\n")
-regions_updated %>%
-  filter(cluster %in% "LAC") %>%
-  group_by(subcluster) %>%
+regions_updated |>
+  filter(cluster %in% "LAC") |>
+  group_by(subcluster) |>
   summarize(countries = paste(name_country, collapse = ", "))
 
 # Save updated regions data

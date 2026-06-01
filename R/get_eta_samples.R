@@ -38,10 +38,10 @@ get_eta_samples <- function(fit, year_select = 2023, countryyear_select = NULL) 
     stop("The input 'fit' must contain 'samples'.")
   }
 
-  iso_codes <- fit$geo_unit_index %>%
+  iso_codes <- fit$geo_unit_index |>
     dplyr::rename(C = c)
 
-  year_index <- fit$time_index %>%
+  year_index <- fit$time_index |>
     dplyr::rename(T = t)
 
   # Determine if validation run
@@ -52,12 +52,12 @@ get_eta_samples <- function(fit, year_select = 2023, countryyear_select = NULL) 
     y_df <- tibble::tibble(
       held_out = as.logical(fit$stan_data$held_out),
       iso = fit$data$iso
-    ) %>%
-      group_by(iso) %>%
-      mutate(n_train = sum(held_out == 0),
-             n_test = sum(held_out == 1)) %>%
-      ungroup() %>%
-      filter(n_train > 0, n_test > 0)
+    ) |>
+      dplyr::group_by(iso) |>
+      dplyr::mutate(n_train = sum(held_out == 0),
+             n_test = sum(held_out == 1)) |>
+      dplyr::ungroup() |>
+      dplyr::filter(n_train > 0, n_test > 0)
     iso_include <- unique(y_df$iso)
   } else {
     iso_include <- unique(fit$data$iso)
@@ -65,28 +65,28 @@ get_eta_samples <- function(fit, year_select = 2023, countryyear_select = NULL) 
 
   # Extract draws
   params <- c("eta")
-  draws <- extract_draws(fit, params) %>%
-    tidybayes::spread_draws(eta[C, T]) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(-.chain, -.iteration) %>%
-    dplyr::rename(draw = .draw) %>%
-    dplyr::left_join(iso_codes, by = "C") %>%
+  draws <- extract_draws(fit, params) |>
+    tidybayes::spread_draws(eta[C, T]) |>
+    dplyr::ungroup() |>
+    dplyr::select(-.chain, -.iteration) |>
+    dplyr::rename(draw = .draw) |>
+    dplyr::left_join(iso_codes, by = "C") |>
     dplyr::left_join(year_index, by = "T")
 
   # Filter by country-year combinations or year
   if (!is.null(countryyear_select)) {
     # countryyear_select takes precedence
-    draws <- draws %>%
-      dplyr::inner_join(countryyear_select, by = c("iso", "year")) %>%
+    draws <- draws |>
+      dplyr::inner_join(countryyear_select, by = c("iso", "year")) |>
       dplyr::filter(iso %in% iso_include)
   } else {
     # Use year_select
-    draws <- draws %>%
+    draws <- draws |>
       dplyr::filter(year == year_select,
                     iso %in% iso_include)
   }
 
-  draws <- draws %>%
+  draws <- draws |>
     dplyr::select(iso, year, eta, draw,
                   dplyr::any_of(c("cluster", "subcluster", "name_region")))
 

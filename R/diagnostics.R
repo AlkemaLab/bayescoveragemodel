@@ -36,8 +36,8 @@ get_convergence_diagnostics <- function(fit, model_name = "spline"){
     parnames <- c(parnames, "global_shrinkage_dm_estimate", "sqrt_caux_dm_estimate")
   }
   # add ar parameters
-  summ <- extract_summary(fit, parnames) %>%
-    arrange(desc(rhat))
+  summ <- extract_summary(fit, parnames) |>
+    dplyr::arrange(desc(rhat))
   write_csv(summ, file = file.path(fit$output_dir, "diagnostics.csv"))
 
   # Check Rhat convergence

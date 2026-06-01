@@ -43,8 +43,8 @@ compile_model <- function(force_recompile, #mypackage = "fpet2",
     #// rho_estimate[1] ~ {{RHO_PRIOR}} T[0, 1];
     #// tau_estimate[1] ~ {{TAU_PRIOR}} T[0, positive_infinity()];
     # Replace tags with correct values
-    #      stan_code <- readr::read_file(stan_file_path) %>%
-    #     stringr::str_replace_all("\\{\\{RHO_PRIOR\\}\\}", rho_prior) %>%
+    #      stan_code <- readr::read_file(stan_file_path) |>
+    #     stringr::str_replace_all("\\{\\{RHO_PRIOR\\}\\}", rho_prior) |>
     #     stringr::str_replace_all("\\{\\{TAU_PRIOR\\}\\}", tau_prior)
     #     temp_stan_file_path <- cmdstanr::write_stan_file(stan_code)
 

@@ -15,15 +15,15 @@ get_standata_routine <- function(service_statistic_df, # filtered to pop (eg cou
                                  time_index, geo_unit_index
 ){
   dat_routine <-
-    service_statistic_df %>%
+    service_statistic_df |>
     dplyr::mutate(routine_lower = pmax(0, routine_value - qnorm(0.975)*sd_routine),
                   routine_upper = pmin(1, routine_value + qnorm(0.975)*sd_routine),
-                  sd2_routine_roc = sd_routine_roc^2) %>%
-    left_join(time_index, by = "year") %>%
+                  sd2_routine_roc = sd_routine_roc^2) |>
+    dplyr::left_join(time_index, by = "year") |>
     # exclude data prior to the most recent survey? right now we don't
-    rename(t_routine_j = t) %>%
-    left_join(geo_unit_index) %>%
-    rename(c_routine_j = c)
+    dplyr::rename(t_routine_j = t) |>
+    dplyr::left_join(geo_unit_index) |>
+    dplyr::rename(c_routine_j = c)
   if (dim(dat_routine)[1] == 0){
     dat_routine <- NULL
     routine_list <- NULL
@@ -32,8 +32,8 @@ get_standata_routine <- function(service_statistic_df, # filtered to pop (eg cou
       stop("some mismatch between regions provided in routine data vs those in survey data.")
     }
 
-    dat_model <- dat_routine %>%
-      filter(!is.na(routine_roc))  %>% # we don't filter yet for dat_routine as we do want start years in the plot
+    dat_model <- dat_routine |>
+      dplyr::filter(!is.na(routine_roc))  |> # we don't filter yet for dat_routine as we do want start years in the plot
       dplyr::select(routine_roc, sd2_routine_roc,  c_routine_j, t_routine_j, log_sigma_mean_routine_roc)
 
     routine_list <- c(list(N_routine = dim(dat_model)[1]),

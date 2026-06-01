@@ -13,21 +13,21 @@ add_uncertainty_in_obs <- function(fit, perc_low = 0.025, perc_up = 0.975){
 
   draws_obj <- extract_draws(fit, "eta_i")
 
-  yhat_i <- draws_obj %>%
-    tidybayes::spread_draws(eta_i[i]) %>%
-    group_by(i) %>%
-    summarise(mean_yhat = mean(eta_i[i])) %>%
-    pull(mean_yhat)
+  yhat_i <- draws_obj |>
+    tidybayes::spread_draws(eta_i[i]) |>
+    dplyr::group_by(i) |>
+    dplyr::summarise(mean_yhat = mean(eta_i[i])) |>
+    dplyr::pull(mean_yhat)
 
-  scale_i <- extract_draws(fit, "scale") %>%
-    tidybayes::spread_draws(scale[i]) %>%
-    group_by(i) %>%
-    summarise(mean_scale = mean(scale[i])) %>%
-    pull(mean_scale)
+  scale_i <- extract_draws(fit, "scale") |>
+    tidybayes::spread_draws(scale[i]) |>
+    dplyr::group_by(i) |>
+    dplyr::summarise(mean_scale = mean(scale[i])) |>
+    dplyr::pull(mean_scale)
 
-  model_data <- fit$data %>%
-    as_tibble() %>%
-    mutate(yhat = yhat_i, scale = scale_i)
+  model_data <- fit$data |>
+    as_tibble() |>
+    dplyr::mutate(yhat = yhat_i, scale = scale_i)
 
   n_rows <- nrow(model_data)
   n_simulations <- 2000
@@ -47,7 +47,7 @@ add_uncertainty_in_obs <- function(fit, perc_low = 0.025, perc_up = 0.975){
   if (any(is.na(simulated_samples))) {
     print("Removing NAs from simulated samples to get uncertainty in obs")
   }
-  model_data <- model_data %>% mutate(low_indicator = apply(simulated_samples, 1, quantile, probs = perc_low, na.rm = TRUE),
+  model_data <- model_data |> dplyr::mutate(low_indicator = apply(simulated_samples, 1, quantile, probs = perc_low, na.rm = TRUE),
                                       up_indicator = apply(simulated_samples, 1, quantile, probs = perc_up, na.rm = TRUE),
                                       est_indicator = indicator)
 

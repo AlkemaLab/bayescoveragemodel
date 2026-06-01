@@ -28,7 +28,7 @@ regions_dat <- read_csv(here::here(data_folder, "regions_updated.csv"))
 # subnational data
 dat0 <- read_csv(here::here(data_folder, "ICEH_adm1_dataforcurrentregions.csv"))
 # let's rename into admin1
-dat0 <- dat0 %>% rename(admin1 = unique_name)
+dat0 <- dat0 |> rename(admin1 = unique_name)
 
 # Choose an indicator
 indicator_select <- "vdpt"#"ideliv"#  #"anc4""vdpt"#
@@ -47,11 +47,11 @@ popweights <- read_csv(here::here(paste0("data_raw/est_denominatorweights_", ind
 dat0_nat <- read_dta(here::here(data_folder, "ICEH_national.dta"))
 national_dat_df <- bayescoveragemodel::process_data(dat = dat0_nat, regions_dat = regions_dat,
                     indicator = indicator_select)
-#dat %>% filter(iso == iso_select) %>% pull(admin1) %>% unique()
+#dat |> filter(iso == iso_select) |> pull(admin1) |> unique()
 
 fit_local <- bayescoveragemodel::fit_model(runstep = "local_subnational",
-                      survey_df = dat  %>% filter(iso == iso_select),
-                      national_dat_df = national_dat_df %>% filter(iso == iso_select),
+                      survey_df = dat  |> filter(iso == iso_select),
+                      national_dat_df = national_dat_df |> filter(iso == iso_select),
                       popweights  = popweights ,
                       chains = 4,
                       iter_sampling = 300,
@@ -117,8 +117,8 @@ dat0_nat <- read_dta(here::here(data_folder, "ICEH_national.dta"))
 national_dat_df <- bayescoveragemodel::process_data(dat = dat0_nat, regions_dat = regions_dat,
                                 indicator = indicator_select)
 fit_local_mali <- bayescoveragemodel::fit_model(runstep = "local_subnational",
-                       survey_df = dat  %>% filter(iso == iso_select),
-                       national_dat_df = national_dat_df %>% filter(iso == iso_select),
+                       survey_df = dat  |> filter(iso == iso_select),
+                       national_dat_df = national_dat_df |> filter(iso == iso_select),
                        popweights  = popweights ,
                        chains = 4,
                        iter_sampling = 300,
@@ -133,18 +133,18 @@ p_mali <- bayescoveragemodel::plot_estimates_local_all(results = fit_local_mali)
 # w routine data
 routine_dat <- read_csv(here::here(routinedata_processed,
                                    paste0("routine_data_subnat_", indicator_select, ".csv")))
-routine_admins <- routine_dat %>% filter(iso == iso_select) %>% pull(admin1) %>% unique()
+routine_admins <- routine_dat |> filter(iso == iso_select) |> pull(admin1) |> unique()
 is.element(routine_admins, fit_local_mali$geo_unit_index$admin1)
 # remove those that don't match
-routine_dat_use <- routine_dat %>%
-  filter(iso == iso_select) %>%
+routine_dat_use <- routine_dat |>
+  filter(iso == iso_select) |>
   filter(admin1 %in% fit_local_mali$geo_unit_index$admin1)
 routine_dat_use$routine_roc
 
 #devtools::load_all(here::here())
 fit_local_w_routine <- bayescoveragemodel::fit_model(runstep = "local_subnational",
-                                 survey_df = dat  %>% filter(iso == iso_select),
-                                 national_dat_df = national_dat_df %>% filter(iso == iso_select),
+                                 survey_df = dat  |> filter(iso == iso_select),
+                                 national_dat_df = national_dat_df |> filter(iso == iso_select),
                                  popweights  = popweights ,
                                  routine_data = routine_dat_use,
                                  chains = 4,

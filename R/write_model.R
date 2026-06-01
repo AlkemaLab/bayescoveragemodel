@@ -34,11 +34,11 @@ write_model <- function(add_aggregates = FALSE,
   genquantities_waggregates_code <- readr::read_file(here::here("inst/stan", "aggregates_genquantities.stan"))
   genquantities_code <- readr::read_file(here::here("inst/stan", "nonaggregates_genquantities.stan"))
 
-  stan_code <- stan_code %>%
+  stan_code <- stan_code |>
     stringr::str_replace_all("\\{\\{AGGREGATES_DATA\\}\\}",
-                             ifelse(add_aggregates, aggregates_data_code, " ")) %>%
+                             ifelse(add_aggregates, aggregates_data_code, " ")) |>
     stringr::str_replace_all("\\{\\{datamodel_MODEL\\}\\}",
-                             ifelse(add_aggregates, datamodel_waggregates_code, datamodel_code))%>%
+                             ifelse(add_aggregates, datamodel_waggregates_code, datamodel_code))|>
     stringr::str_replace_all("\\{\\{CHOOSE_AGGREGATESYESNO_GENQUANTITIES\\}\\}",
                              ifelse(add_aggregates,
                                     genquantities_waggregates_code,
@@ -49,16 +49,16 @@ write_model <- function(add_aggregates = FALSE,
   routine_data_code <- readr::read_file(here::here("inst/stan", "routine_data.stan"))
   routine_parameters_code <- readr::read_file(here::here("inst/stan", "routine_parameters.stan"))
   routine_model_code <- readr::read_file(here::here("inst/stan", "routine_model.stan"))
-  stan_code <- stan_code %>%
+  stan_code <- stan_code |>
     stringr::str_replace_all("\\{\\{routine_DATA\\}\\}",
-                             ifelse(add_routine, routine_data_code, " ")) %>%
+                             ifelse(add_routine, routine_data_code, " ")) |>
     stringr::str_replace_all("\\{\\{routine_PARAMETERS\\}\\}",
-                             ifelse(add_routine, routine_parameters_code, " ")) %>%
+                             ifelse(add_routine, routine_parameters_code, " ")) |>
     stringr::str_replace_all("\\{\\{routine_MODEL\\}\\}",
                              ifelse(add_routine, routine_model_code, " "))
 
   # write to file
-  stanmodelname <- case_when(
+  stanmodelname <- dplyr::case_when(
     ! add_routine & !add_aggregates ~ "fpem",
     add_routine & !add_aggregates ~ "fpem_routine",
     ! add_routine & add_aggregates ~ "fpem_aggregates",

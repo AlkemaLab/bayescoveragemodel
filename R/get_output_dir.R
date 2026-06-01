@@ -8,7 +8,7 @@
 #' @keywords internal
 get_output_dir <- function(...) {
   do.call(file.path,
-          c(list(here::here() %>% dirname(), "bayestransition_output"), ...))
+          c(list(here::here() |> dirname(), "bayestransition_output"), ...))
 }
 
 
@@ -44,7 +44,7 @@ rename_output_folder <- function(indicator, run_step, old_folder_name, new_folde
   if (!dir.exists(old_dir)) stop("Old directory doesn't exist: ", old_dir)
   if (dir.exists(new_dir)) stop("New directory already exists: ", new_dir)
 
-  success <- file.rename(old_dir, new_dir)
+  success <- file.dplyr::rename(old_dir, new_dir)
   if (!success) stop("Failed to rename the folder.")
 
   # load and update fit object

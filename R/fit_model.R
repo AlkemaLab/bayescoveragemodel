@@ -169,7 +169,6 @@
 #'
 #' @importFrom tibble tibble
 #' @importFrom splines bs
-#' @import dplyr
 #' @importFrom readr read_file
 #' @importFrom stringr str_replace_all
 #'
@@ -281,7 +280,7 @@ fit_model <- function(
   backend <- match.arg(backend)
 
   data <- survey_df # for now, just to keep the same name as in fpem
-  indicator <- data %>% pull(indic) %>% unique()
+  indicator <- data |> dplyr::pull(indic) |> unique()
   if (length(indicator) != 1){
     stop("survey data needs to contain data for just 1 indicator")
   }
@@ -456,22 +455,22 @@ fit_model <- function(
   # keep the names of the original data
   names_original_data <- names(data)
   print("We filter data to be inside estimation period")
-  data <- data %>%
-    filter(year >= start_year, year <= end_year)
+  data <- data |>
+    dplyr::filter(year >= start_year, year <= end_year)
 
   if (!(runstep %in% c("global_subnational", "local_subnational"))){
     print("We use national data")
     if (runstep == "local_national" & !is.null(iso_select)){
       print(paste("We only use data for", iso_select))
-      data <- data %>%
-        filter(iso %in% iso_select)
+      data <- data |>
+        dplyr::filter(iso %in% iso_select)
     }
   } else {
     print("We use subnational data (but you already knew that)")
     if (runstep == "local_subnational"& !is.null(iso_select)){
       print(paste("We only use data for", iso_select))
-      data <- data %>%
-        filter(iso %in% iso_select)
+      data <- data |>
+        dplyr::filter(iso %in% iso_select)
     }
   }
 
@@ -480,15 +479,15 @@ fit_model <- function(
     if (global_fit$data_from2010only){
       print("We fit to survey data from 2010 onwards.")
       data <-
-        data %>%
-        filter(year >= 2010)
+        data |>
+        dplyr::filter(year >= 2010)
     }
   }
 
   if (runstep == "step1a"){
     print("We do give nonSE to DHS (by temporarily renaming DHS into DHS0)")
-    data <- data %>%
-      mutate(data_series_type = ifelse(data_series_type == "DHS", "DHS0", data_series_type))
+    data <- data |>
+      dplyr::mutate(data_series_type = ifelse(data_series_type == "DHS", "DHS0", data_series_type))
   }
 
   # what validation data to use?
@@ -596,7 +595,7 @@ fit_model <- function(
     hierarchical_asymptote,
     hierarchical_splines,
     hierarchical_level
-  )) %>%
+  )) |>
     setdiff("intercept")
 
   # Make sure there are no NAs in any of the columns
@@ -637,27 +636,27 @@ fit_model <- function(
 
   # (e.g., subnational areas within a country) have consecutive indices.
   # This ordering is required for correlated_smoothing to work correctly.
-  geo_unit_index <- data[!is.na(data[[area]]), ] %>%
-    dplyr::distinct(!!! syms(hierarchical_column_names)) %>%
-    dplyr::arrange(!!! syms(hierarchical_column_names)) %>%
-    dplyr::mutate(c = 1:n())
+  geo_unit_index <- data[!is.na(data[[area]]), ] |>
+    dplyr::distinct(!!! rlang::syms(hierarchical_column_names)) |>
+    dplyr::arrange(!!! rlang::syms(hierarchical_column_names)) |>
+    dplyr::mutate(c = 1:dplyr::n())
 
-  source_index <- data %>%
-    dplyr::distinct("{source}" := .data[[source]]) %>%
-    dplyr::mutate(source = 1:n())
+  source_index <- data |>
+    dplyr::distinct("{source}" := .data[[source]]) |>
+    dplyr::mutate(source = 1:dplyr::n())
 
   year_by <- c()
   year_by[year] = "year"
-  data <- data %>%
-    dplyr::left_join(time_index, by = year_by) %>%
-    dplyr::left_join(geo_unit_index, by = hierarchical_column_names) %>%
+  data <- data |>
+    dplyr::left_join(time_index, by = year_by) |>
+    dplyr::left_join(geo_unit_index, by = hierarchical_column_names) |>
     dplyr::left_join(source_index, by = source)
 
   # for fp, data needs to be sorted by country
-  data <- data %>% arrange(c)
+  data <- data |> dplyr::arrange(c)
   # now save original data
-  original_data <- data %>%
-    dplyr::select(all_of(names_original_data))
+  original_data <- data |>
+    dplyr::select(dplyr::all_of(names_original_data))
 
 
   ## all data checks and imputation related to NAs
@@ -714,21 +713,21 @@ fit_model <- function(
   }
   else {
     # Otherwise, pick t_star to be the mean of the observation years.
-    t_stars <- data %>%
-      dplyr::filter(!is.na(c)) %>%
-      dplyr::group_by(c) %>%
-      dplyr::summarize(t_star = round(mean(t))) %>%
+    t_stars <- data |>
+      dplyr::filter(!is.na(c)) |>
+      dplyr::group_by(c) |>
+      dplyr::summarize(t_star = round(mean(t))) |>
       dplyr::pull(t_star)
   }
 
   t_last <- max(data$t)
 
-  data <- data %>%
+  data <- data |>
     # add index for DHS
     # consider: remove dependencies on data_series_type?
-    mutate(isDHS = ifelse(data_series_type == "DHS", 1, 0))
+    dplyr::mutate(isDHS = ifelse(data_series_type == "DHS", 1, 0))
   if (!add_dataoutliers){
-    data <- data %>% mutate(nooutlier = 1)
+    data <- data |> dplyr::mutate(nooutlier = 1)
   }
 
   # add obs period per country
@@ -736,15 +735,15 @@ fit_model <- function(
     # if there are national aggregates
     t_min <- rep(min(data$t), nrow(geo_unit_index))
   } else {
-    t_min <- data %>%
-      group_by(c) %>%
-      summarise(t_min = min(t)) %>%
-      pull(t_min)
+    t_min <- data |>
+      dplyr::group_by(c) |>
+      dplyr::summarise(t_min = min(t)) |>
+      dplyr::pull(t_min)
     t_min <- ifelse(t_min > (t_stars-1), t_stars- 1, t_min)
   }
-  # t_max <- data %>%
-  #   group_by(c) %>%
-  #   summarise(t_max = max(t)) %>%
+  # t_max <- data |>
+  #   group_by(c) |>
+  #   summarise(t_max = max(t)) |>
   #   pull(t_max)
   # t_max <- ifelse(t_max < (t_stars+ 1), t_stars+ 1, t_max)
   # update: setting t_max to 2026 to avoid issues when including routine data
@@ -909,14 +908,14 @@ fit_model <- function(
     }
 
     # get estimates of the smoothing parameters rho and tau from the global fit
-    smoothing_data$rho_fixed <- global_fit$post_summ %>% filter(variable == "rho[1]") %>% pull(postmean)
-    smoothing_data$tau_fixed <- global_fit$post_summ %>% filter(variable == "tau[1]") %>% pull(postmean)
+    smoothing_data$rho_fixed <- global_fit$post_summ |> dplyr::filter(variable == "rho[1]") |> dplyr::pull(postmean)
+    smoothing_data$tau_fixed <- global_fit$post_summ |> dplyr::filter(variable == "tau[1]") |> dplyr::pull(postmean)
   }
   if (fix_subnat_corr){
     if (is.null(global_fit)) {
       stop("fix_subnat_corr was set to TRUE, but a global_fit was not provided.")
     }
-    smoothing_data$rho_correlationeps_fixed <- global_fit$post_summ %>% filter(variable == "rho_correlationeps[1]") %>% pull(postmean)
+    smoothing_data$rho_correlationeps_fixed <- global_fit$post_summ |> dplyr::filter(variable == "rho_correlationeps[1]") |> dplyr::pull(postmean)
   }
 
   # compute info for how to do correlated smoothing
@@ -969,16 +968,16 @@ fit_model <- function(
     # right ones, in the right order for sources in local fit
     parnames_outlier_hyper_tofix <-  c(parnames_outlier_hyper)
     parname <- "nonse"
-    global_nonse_estimates <- global_fit$post_summ %>%
-      filter(variable_no_index == parname) %>%
-      mutate(data_series_type = global_fit$source_index$data_series_type)
+    global_nonse_estimates <- global_fit$post_summ |>
+      dplyr::filter(variable_no_index == parname) |>
+      dplyr::mutate(data_series_type = global_fit$source_index$data_series_type)
     nonse_data[[paste0(parname, "_fixed")]] <-
       source_index |>
       dplyr::left_join(global_nonse_estimates, by = "data_series_type") |>
       dplyr::pull(postmean)
     # for outliers
     for (parname in parnames_outlier_hyper_tofix){
-      nonse_data[[paste0(parname, "_fixed")]] <- global_fit$post_summ %>% filter(variable == paste0(parname, "[1]")) %>% pull(postmean)
+      nonse_data[[paste0(parname, "_fixed")]] <- global_fit$post_summ |> dplyr::filter(variable == paste0(parname, "[1]")) |> dplyr::pull(postmean)
     }
   }# end fixing dm pars
 
@@ -1004,20 +1003,20 @@ fit_model <- function(
     # geo_unit_subindex <- geo_unit_index[c(area, "c")]
     # required_pop_rows <- tidyr::expand_grid(
     #   year = time_index$year,
-    #   area = geo_unit_subindex[[area]]) %>%
+    #   area = geo_unit_subindex[[area]]) |>
     #   dplyr::left_join(time_index, by="year")
     # colnames(required_pop_rows) <- c(year, area, "t")
-    # required_pop_rows <- required_pop_rows %>%
-    #   dplyr::left_join(geo_unit_subindex, by=area) %>%
+    # required_pop_rows <- required_pop_rows |>
+    #   dplyr::left_join(geo_unit_subindex, by=area) |>
     #   dplyr::left_join(population_data, by = c(year, area))
     # missing_pop_rows <- required_pop_rows |>
     #   dplyr::filter(is.na(population))
     # if (nrow(missing_pop_rows) > 0) {
     #   stop(glue::glue("If there are NAs in column {area}, `population_data` must include population data for all areas and years."))
     # }
-    # geo_unit_pop_wt <- required_pop_rows[c("t", "c", "population")] %>%
-    #   tidyr::pivot_wider(names_from = "t", values_from = "population") %>%
-    #   dplyr::select(-c) %>%
+    # geo_unit_pop_wt <- required_pop_rows[c("t", "c", "population")] |>
+    #   tidyr::pivot_wider(names_from = "t", values_from = "population") |>
+    #   dplyr::select(-c) |>
     #   as.matrix()
     # geo_unit_pop_wt <- sweep(geo_unit_pop_wt, 2, apply(geo_unit_pop_wt, 2, sum), `/`)
 
@@ -1053,17 +1052,17 @@ fit_model <- function(
     # subnational future additions: some checks that we have pop for all regions?
     # else a c problem so this would show up anyway?
     # stan_data$prop_tr <- matrix(1/nrow(geo_unit_index), nrow = nrow(time_index), ncol = nrow(geo_unit_index))
-    stan_data$prop_tr <- popweights %>%
-      filter(iso == iso_select) %>%
-      select(-iso) %>%
-      left_join(geo_unit_index %>%
-                  select(admin1, c)) %>%
-      left_join(time_index %>%
-                  select(year, t)) %>%
-      arrange(c) %>%
-      select( -c, -t)  %>%
-      pivot_wider(names_from = admin1, values_from = prop) %>%
-      select(-year) %>%
+    stan_data$prop_tr <- popweights |>
+      dplyr::filter(iso == iso_select) |>
+      dplyr::select(-iso) |>
+      dplyr::left_join(geo_unit_index |>
+                  dplyr::select(admin1, c)) |>
+      dplyr::left_join(time_index |>
+                  dplyr::select(year, t)) |>
+      dplyr::arrange(c) |>
+      dplyr::select( -c, -t)  |>
+      tidyr::pivot_wider(names_from = admin1, values_from = prop) |>
+      dplyr::select(-year) |>
       as.matrix()
   }
 
@@ -1101,7 +1100,7 @@ fit_model <- function(
                           service_statistic_df = routine_data,
                           hyper_param = routine_hyperparameters,
                           time_index = time_index,
-                          geo_unit_index = geo_unit_index %>%
+                          geo_unit_index = geo_unit_index |>
                             dplyr::select(any_of(c("iso", "admin1", "c")))
                     )
       dat_routine <- combined_list$dat_routine # to use for plotting
@@ -1118,7 +1117,7 @@ fit_model <- function(
 
   #### reading and loading stan model
   if (is.null(stan_file_path)){
-    stanmodelname <- case_when(
+    stanmodelname <- dplyr::case_when(
       model_name == "rw2" ~ "rw2",
       is.null(routine_data) & !add_aggregates ~ "fpem",
       !is.null(routine_data) & !add_aggregates ~ "fpem_routine",
@@ -1447,12 +1446,12 @@ fit_model <- function(
     # fix national obs
     # rename NA as national in obs
     # making sure that data are plotted
-    result$data <- result$data %>%
+    result$data <- result$data |>
       # data that were used in fitting
-      mutate(admin1 = ifelse(is.na(admin1), "National", admin1)) %>%
+      dplyr::mutate(admin1 = ifelse(is.na(admin1), "National", admin1)) |>
       # data not used in fitting
-      bind_rows(result$national_dat_df %>%
-                mutate(admin1 = "National", est_indicator = indicator, held_out = 0))
+      dplyr::bind_rows(result$national_dat_df |>
+                dplyr::mutate(admin1 = "National", est_indicator = indicator, held_out = 0))
   }
 
   if (get_posteriors){
@@ -1467,11 +1466,11 @@ fit_model <- function(
     # filter to 2010 onwards in data and estimates
     if (runstep %in%  c("local_national", "local_subnational")){
       result$posteriors$temporal <-
-        result$posteriors$temporal %>%
-          filter(year >= 2010)
+        result$posteriors$temporal |>
+          dplyr::filter(year >= 2010)
       result$data <-
-        result$data %>%
-          filter(year >= 2010)
+        result$data |>
+          dplyr::filter(year >= 2010)
 
     }
     if (save_results)

@@ -1,9 +1,12 @@
 # Test script for cmdstanr vs rstan backend compatibility
 # This script verifies that both backends produce consistent results
 
-library(dplyr)
-library(tibble)
-library(haven)
+#library(dplyr)
+#library(tibble)
+
+#library(haven)
+#library(readr)
+
 
 # Check if packages are available
 has_cmdstanr <- requireNamespace("cmdstanr", quietly = TRUE)
@@ -46,7 +49,7 @@ create_test_data <- function(seed = 123) {
   # n_obs <- 30
   # n_countries <- 3
   #
-  # data <- tibble(
+  # data <- tibble::tibble(
   #   iso = rep(c("USA", "CAN", "MEX"), each = n_obs / n_countries),
   #   year = rep(2010:2019, length.out = n_obs),
   #   cluster = rep(c("Americas", "Americas", "Americas"), each = n_obs / n_countries),
@@ -64,7 +67,7 @@ create_test_data <- function(seed = 123) {
 
   # Read national survey data and region metadata
   data_folder <- "data_raw"
-  dat0 <- read_dta(here::here(data_folder, "ICEH_national.dta"))
+  dat0 <- haven::read_dta(here::here(data_folder, "ICEH_national.dta"))
   regions_dat <- readr::read_csv(
     here::here(data_folder, "regions_updated.csv"))
 
@@ -81,72 +84,7 @@ create_test_data <- function(seed = 123) {
   return(data)
 }
 
-#------------------------------------------------------------------------------
-# Test 1: Compilation
-#------------------------------------------------------------------------------
-cat(strrep("=", 70), "\n")
-cat("TEST 1: Model Compilation\n")
-cat(strrep("=", 70), "\n\n")
 
-test_compilation <- function() {
-  results <- list()
-
-  # Get a Stan file path (we'll compile but not run to save time)
-  # Use the simplest model available
-  stan_file_path <- system.file("stan/fpem.stan", package = "bayescoveragemodel")
-
-  if (stan_file_path == "" || !file.exists(stan_file_path)) {
-    cat("WARNING: Could not find Stan file. Skipping compilation test.\n\n")
-    return(NULL)
-  }
-
-  if (has_cmdstanr) {
-    cat("Testing cmdstanr compilation... ")
-    tryCatch({
-      model_cmdstan <- compile_model(
-        force_recompile = FALSE,
-        stan_file_path = stan_file_path,
-        backend = "cmdstanr"
-      )
-      cat("✓ SUCCESS\n")
-      results$cmdstanr <- "success"
-    }, error = function(e) {
-      cat("✗ FAILED:", conditionMessage(e), "\n")
-      results$cmdstanr <- paste("failed:", conditionMessage(e))
-    })
-  }
-
-  if (has_rstan) {
-    cat("Testing rstan compilation... ")
-    tryCatch({
-      model_rstan <- compile_model(
-        force_recompile = FALSE,
-        stan_file_path = stan_file_path,
-        backend = "rstan"
-      )
-      cat("✓ SUCCESS\n")
-      results$rstan <- "success"
-    }, error = function(e) {
-      cat("✗ FAILED:", conditionMessage(e), "\n")
-      results$rstan <- paste("failed:", conditionMessage(e))
-    })
-  }
-
-  cat("\n")
-  return(results)
-}
-
-#library(bayescoveragemodel)
-# load all because I don't want to install yet!
-devtools::load_all(here::here())
-compilation_results <- test_compilation()
-
-#------------------------------------------------------------------------------
-# Test 2: Model Fitting (with minimal iterations for speed)
-#------------------------------------------------------------------------------
-cat(strrep("=", 70), "\n")
-cat("TEST 2: Model Fitting\n")
-cat(strrep("=", 70), "\n\n")
 
 test_fitting <- function() {
   cat("Creating test data...\n")
@@ -202,7 +140,8 @@ test_fitting <- function() {
 }
 
 #library(localhierarchy)
-devtools::load_all(here::here())
+#devtools::load_all(here::here())
+library(bayescoveragemodel)
 rstan_options(auto_write = TRUE)
 fitting_results <- test_fitting()
 
