@@ -206,7 +206,7 @@ fit_model <- function(
   # local_national =  get local results only
   ## not implemented currently: step1: step1a  and step1b combined
   ## in progress: global_subnational, local_subnational
-  global_fit = NULL, # eventually, read in from data_raw if needed but NULL
+  global_fit = NULL,
 
   ## arguments that are relevant for first global run only (follow from global_fit in other cases)
   t_star = 2010,   # t_star needs to be within the estimation period
@@ -356,11 +356,27 @@ fit_model <- function(
         runstep == "global_subnational" ~ "1b",
         TRUE ~ "global_subnational"
       )
-      # global_fit <- readRDS(file = paste0(
-      #   here::here("data_raw/internal/"), indicator, "_summary",
-      #   globalstepname,
-      #   ".rds"))
-      global_fit <- get(paste0("globalfit", globalstepname, "_", indicator))
+      # Get the global fit object from package data
+      # Use data() to load lazy-loaded package data
+      globalfit_name <- paste0("globalfit", globalstepname, "_", indicator)
+
+      # Try to load the global fit object from package data
+      # Using tryCatch because data() throws an error if the dataset doesn't exist
+      global_fit <- tryCatch({
+        # Load the data into a temporary environment to avoid polluting global env
+        temp_env <- new.env()
+        data(list = globalfit_name, package = "bayescoveragemodel", envir = temp_env)
+        temp_env[[globalfit_name]]
+      }, error = function(e) {
+        stop(paste0(
+          "Global fit object '", globalfit_name, "' not found in package data.\n",
+          "For runstep '", runstep, "', a global fit from step ", globalstepname,
+          " is required.\n",
+          "Please provide a global_fit object or ensure '", globalfit_name, ".rda' ",
+          "exists in the package data/ folder.\n",
+          "Original error: ", e$message
+        ))
+      })
     }
 
     print("We use a global fit, and take selected settings from there.")
