@@ -1091,19 +1091,31 @@ fit_model <- function(
     #hyper_param <- get(paste0("routine_hyperparameters_", indicator))
 
     # step 1: add log_sigma_mean_routine_roc to the service_stats_df
-    # fit_routine is internal data
+    # fit_routine is internal data - load it from package data
+    fit_routine_obj <- tryCatch({
+      temp_env <- new.env()
+      data(list = "fit_routine", package = "bayescoveragemodel", envir = temp_env)
+      temp_env[["fit_routine"]]
+    }, error = function(e) {
+      stop(paste0(
+        "Internal data object 'fit_routine' not found in package data.\n",
+        "This is required for processing routine data.\n",
+        "Original error: ", e$message
+      ))
+    })
+
     routine_data$log_sigma_mean_routine_roc <-
-      get_logsigma_mean(fit_routineglobal = fit_routine,
+      get_logsigma_mean(fit_routineglobal = fit_routine_obj,
                         indicator = routine_data$indicator_name,
                         worst_combi = routine_data$worst_combi
       )
     # used to have mean_log_sigma, hierarchical_sigma
     # now just hierarchuical sigma is used
-    vc <- brms::VarCorr(fit_routine)
+    vc <- brms::VarCorr(fit_routine_obj)
     sd_country <- vc$country$sd[, "Estimate"]
     names(sd_country) <-  gsub("sigma_indicator_name", "", rownames(vc$country$sd))
     #sd_country
-    routine_hyperparameters <- tibble(
+    routine_hyperparameters <- tibble::tibble(
       mean_log_sigma = 0,
       hierarchical_sigma = sd_country[routine_data$indicator_name[1]]
     )

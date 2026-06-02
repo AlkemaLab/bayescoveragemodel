@@ -59,9 +59,9 @@ get_standata_routine <- function(service_statistic_df, # filtered to pop (eg cou
 get_logsigma_mean <- function(fit_routineglobal,
                               indicator,
                               worst_combi){
-  log(brms::fitted(fit_routineglobal,
+  log(fitted(fit_routineglobal,
                    newdata =
-                     tibble(
+                     tibble::tibble(
                        indicator_name = indicator,
                        worst_combi = worst_combi,
                        country = NA),
