@@ -61,7 +61,7 @@
 #' @param backend character string specifying the Stan backend to use. Options are:
 #'   \itemize{
 #'     \item \code{"cmdstanr"} (default): Use cmdstanr interface (recommended, modern)
-#'     \item \code{"rstan"}: Use rstan interface (legacy, may be required for some workflows)
+#'     \item \code{"rstan"}: Use rstan interface (for deployment of local model with precompiled stan models only)
 #'   }
 #'
 #' Setting for where to save things
