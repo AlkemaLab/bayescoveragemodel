@@ -36,7 +36,7 @@ init_fun <- function(chain_id, stan_data){
     if (!stan_data$fix_smoothing){
       inits <- c(inits,
                  list(
-      rho_estimate = 0.1, #runif(1,0,0.3),
+      rho_estimate = runif(1,0,0.3),
       tau_estimate = runif(1,0.01,0.02)
                  ))
     }
@@ -81,7 +81,10 @@ init_fun <- function(chain_id, stan_data){
                  Betas_sigma_estimate_reverse_1 = sort(abs(rnorm(stan_data$Betas_n_sigma_estimate, 0, 0.01))),
                  Betas_sigma_estimate_reverse_2 = sort(abs(rnorm(stan_data$Betas_n_sigma_estimate, 0, 0.01))),
                  Betas_sigma_estimate_reverse_3 = sort(abs(rnorm(stan_data$Betas_n_sigma_estimate, 0, 0.01))),
-                 Betas_sigma_estimate_reverse_4 = sort(abs(rnorm(stan_data$Betas_n_sigma_estimate, 0, 0.01)))
+                 Betas_sigma_estimate_reverse_4 = sort(abs(rnorm(stan_data$Betas_n_sigma_estimate, 0, 0.01))),
+                 Betas_sigma_estimate_reverse_5 = sort(abs(rnorm(stan_data$Betas_n_sigma_estimate, 0, 0.01))),
+                 Betas_sigma_estimate_reverse_6 = sort(abs(rnorm(stan_data$Betas_n_sigma_estimate, 0, 0.01))),
+                 Betas_sigma_estimate_reverse_7 = sort(abs(rnorm(stan_data$Betas_n_sigma_estimate, 0, 0.01)))
                ))
   }
 
@@ -188,7 +191,6 @@ fix_init_dims_for_rstan <- function(init_list, backend = "cmdstanr") {
         warning(sprintf("Expected scalar for %s but got length %d", param_name, length(val)))
       }
       dim(init_list[[param_name]]) <- NULL
-      next
     }
 
     # Handle known matrices - verify they have proper 2D structure
@@ -199,7 +201,6 @@ fix_init_dims_for_rstan <- function(init_list, backend = "cmdstanr") {
         dim(init_list[[param_name]]) <- c(length(val), 1)
       }
       # If already a matrix, leave as is (dimensions already set)
-      next
     }
 
     # All other parameters are assumed to be vectors/arrays

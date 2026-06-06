@@ -4,6 +4,9 @@
 #'
 #' @param survey_df tibble with survey data
 #' @param routine_df tibble with routine data
+#' @param fit_routine_obj optional fit_routine object (e.g., from brms) containing
+#'   hyperparameters for routine data processing. If NULL (default), the function
+#'   will load the internal package data object \code{fit_routine}.
 #' @param y column name of outcome.
 #' @param se column name of outcome standard error.
 #' @param year column name of outcome year.
@@ -51,8 +54,8 @@
 #' @param get_posteriors boolean indicator of whether to return posterior samples
 #'
 #' @param held_out binary vector indicating which observations are held out. Set to FALSE to hold out no observations.
-#' @param validation_cutoff_year year to use for out-of-sample validation, overwrites held_out (to confirm it does)
-#' @param validation_run boolean indicator of whether it's a validation model run or not
+#' overwritten by validation_cutoff_year if that is not NULL
+#' @param validation_cutoff_year year to use for out-of-sample validation, overwrites held_out
 #'
 #' @param generate_quantities binary vector indicating whether to simulate data from the fitted model
 #' @param stan_file_path stan file path (if NULL, uses internal stan file)
@@ -194,6 +197,7 @@ fit_model <- function(
   area = "iso",
   iso_select  = NULL, # used for local national run
   routine_data = NULL,
+  fit_routine_obj = NULL, # optional fit_routine object; if NULL, loads from internal package data
   # years to produce estimates for
   start_year = 2000,
   end_year = 2030,
@@ -239,7 +243,6 @@ fit_model <- function(
   # Out-of-sample validation
   held_out = FALSE,
   validation_cutoff_year = NULL, # if not NULL, should be a year and is used to define/overwrite held_out set
-  validation_run = FALSE,
 
   save_post_summ = TRUE, # added to be able to NOT save results in a step1a etc run
 
@@ -515,9 +518,11 @@ fit_model <- function(
   }
   if(length(held_out) == 1 && held_out == FALSE) {
     held_out = rep(0, nrow(data))
+    validation_run <- FALSE
   }  else {
     if(length(held_out) != nrow(data)) stop(glue::glue("held_out (length {length(held_out)}) must be same size as dataset ({nrow(data)} rows)."))
     held_out = as.numeric(held_out)
+    validation_run <- TRUE
   }
   data$held_out <- held_out
 
@@ -1090,19 +1095,22 @@ fit_model <- function(
     #hyper_param <- readRDS(here::here("data_raw/internal/", paste0("routine_hyperparameters_", indicator, ".rds")))
     #hyper_param <- get(paste0("routine_hyperparameters_", indicator))
 
+
     # step 1: add log_sigma_mean_routine_roc to the service_stats_df
-    # fit_routine is internal data - load it from package data
-    fit_routine_obj <- tryCatch({
-      temp_env <- new.env()
-      data(list = "fit_routine", package = "bayescoveragemodel", envir = temp_env)
-      temp_env[["fit_routine"]]
-    }, error = function(e) {
-      stop(paste0(
-        "Internal data object 'fit_routine' not found in package data.\n",
-        "This is required for processing routine data.\n",
-        "Original error: ", e$message
-      ))
-    })
+    # If fit_routine_obj not provided, load from internal package data
+    if (is.null(fit_routine_obj)) {
+      fit_routine_obj <- tryCatch({
+        temp_env <- new.env()
+        data(list = "fit_routine", package = "bayescoveragemodel", envir = temp_env)
+        temp_env[["fit_routine"]]
+      }, error = function(e) {
+        stop(paste0(
+          "Internal data object 'fit_routine' not found in package data.\n",
+          "This is required for processing routine data.\n",
+          "Original error: ", e$message
+        ))
+      })
+    }
 
     routine_data$log_sigma_mean_routine_roc <-
       get_logsigma_mean(fit_routineglobal = fit_routine_obj,
