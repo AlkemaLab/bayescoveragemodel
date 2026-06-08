@@ -89,7 +89,7 @@ init_fun <- function(chain_id, stan_data){
     inits <- c(inits,
                list(
                  # to update inits
-                 Ptilde_raw_estimate = (rnorm(stan_data$Ptilde_raw_n_terms_estimate, 1, 0.01))
+                 Ptilde_raw_estimate = (rnorm(stan_data$Ptilde_raw_n_terms_estimate, 0, 0.01))
                ))
   }
   if (stan_data$Ptilde_n_sigma_estimate > 0){
