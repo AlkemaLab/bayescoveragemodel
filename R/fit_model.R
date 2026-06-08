@@ -3,10 +3,6 @@
 #' Fit the transition model to data.
 #'
 #' @param survey_df tibble with survey data
-#' @param routine_df tibble with routine data
-#' @param fit_routine_obj optional fit_routine object (e.g., from brms) containing
-#'   hyperparameters for routine data processing. If NULL (default), the function
-#'   will load the internal package data object \code{fit_routine}.
 #' @param y column name of outcome.
 #' @param se column name of outcome standard error.
 #' @param year column name of outcome year.
@@ -51,6 +47,10 @@
 #'     \item \code{"rw2"}: Local rate of change model, ARIMA(1,2,0)
 #'   }
 #'
+#' @param routine_data data frame with routine data to use in the fit. If NULL (default), no routine data will be used.
+#' @param fit_routine_obj optional fit_routine object (e.g., from brms) containing
+#'   hyperparameters for routine data processing. If NULL (default), the function
+#'   will load the internal package data object \code{fit_routine}.
 #' @param get_posteriors boolean indicator of whether to return posterior samples
 #'
 #' @param held_out binary vector indicating which observations are held out. Set to FALSE to hold out no observations.
@@ -185,8 +185,6 @@ fit_model <- function(
   survey_df,
   national_dat_df = NULL, # relevant only for subnat runs, national data to be considered
   # needs to be filtered to iso_select
-  routine_df = NULL,
-  mean_log_sigma = NULL, # if provided, overwrites the stored parameter
   popweights  = NULL, #a tibble with columns iso, admin1, year, prop
   #population_data = NULL,
   y = "invprobit_indicator",
@@ -1092,11 +1090,6 @@ fit_model <- function(
     dat_routine <- NULL
     routine_list <- NULL
   } else {
-    #hyper_param <- readRDS(here::here("data_raw/internal/", paste0("routine_hyperparameters_", indicator, ".rds")))
-    #hyper_param <- get(paste0("routine_hyperparameters_", indicator))
-
-
-    # step 1: add log_sigma_mean_routine_roc to the service_stats_df
     # If fit_routine_obj not provided, load from internal package data
     if (is.null(fit_routine_obj)) {
       fit_routine_obj <- tryCatch({
@@ -1111,41 +1104,15 @@ fit_model <- function(
         ))
       })
     }
-
-    routine_data$log_sigma_mean_routine_roc <-
-      get_logsigma_mean(fit_routineglobal = fit_routine_obj,
-                        indicator = routine_data$indicator_name,
-                        worst_combi = routine_data$worst_combi
-      )
-    # used to have mean_log_sigma, hierarchical_sigma
-    # now just hierarchuical sigma is used
-    vc <- brms::VarCorr(fit_routine_obj)
-    sd_country <- vc$country$sd[, "Estimate"]
-    names(sd_country) <-  gsub("sigma_indicator_name", "", rownames(vc$country$sd))
-    #sd_country
-    routine_hyperparameters <- tibble::tibble(
-      mean_log_sigma = 0,
-      hierarchical_sigma = sd_country[routine_data$indicator_name[1]]
-    )
-    # print(routine_hyperparameters)
-    # assign(paste0("routine_hyperparameters_", indicator_select),
-    #        routine_hyperparameters,
-    #        envir = .GlobalEnv)
-
-    combined_list <- get_standata_routine(
-                          service_statistic_df = routine_data,
-                          hyper_param = routine_hyperparameters,
-                          time_index = time_index,
-                          geo_unit_index = geo_unit_index |>
-                            dplyr::select(any_of(c("iso", "admin1", "c")))
-                    )
+    # get stan data
+    combined_list <- get_standata_routine(routine_data = routine_data,
+                         fit_routine_obj = fit_routine_obj,
+                         time_index = time_index,
+                         geo_unit_index = geo_unit_index |>
+                           dplyr::select(any_of(c("iso", "admin1", "c"))))
       dat_routine <- combined_list$dat_routine # to use for plotting
       routine_list <- combined_list$routine_list # to pass into stan_data
-      if (!is.null(mean_log_sigma)){
-        routine_list$mean_log_sigma <- mean_log_sigma
-      }
-
-
+      print(combined_list)
   }
 
 

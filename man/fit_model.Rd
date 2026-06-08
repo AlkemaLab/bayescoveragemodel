@@ -7,8 +7,6 @@
 fit_model(
   survey_df,
   national_dat_df = NULL,
-  routine_df = NULL,
-  mean_log_sigma = NULL,
   popweights = NULL,
   y = "invprobit_indicator",
   se = "se_invprobit_indicator",
@@ -64,8 +62,6 @@ fit_model(
 \arguments{
 \item{survey_df}{tibble with survey data}
 
-\item{routine_df}{tibble with routine data}
-
 \item{y}{column name of outcome.}
 
 \item{se}{column name of outcome standard error.}
@@ -79,6 +75,8 @@ fit_model(
 for subnational:}
 
 \item{iso_select}{ISO code to use for local national run}
+
+\item{routine_data}{data frame with routine data to use in the fit. If NULL (default), no routine data will be used.}
 
 \item{fit_routine_obj}{optional fit_routine object (e.g., from brms) containing
 hyperparameters for routine data processing. If NULL (default), the function

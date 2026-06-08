@@ -4,18 +4,15 @@
 \alias{get_standata_routine}
 \title{get_standata_routine}
 \usage{
-get_standata_routine(
-  service_statistic_df,
-  hyper_param,
-  time_index,
-  geo_unit_index
-)
+get_standata_routine(routine_data, fit_routine_obj, time_index, geo_unit_index)
 }
 \arguments{
-\item{service_statistic_df}{tibble with  iso; admin1 for subnat; routine; sd_routine; routine_roc; sd_routine_roc; year
-filtered to pop (eg country)}
+\item{routine_data}{tibble with  iso, year, indicator_name, routine_value, countdownmean
+routine_value is the value of the routine data (eg coverage) and
+countdownmean is the data quality indicator for that iso-year-indicator combi
+needs to be filtered to iso of interest}
 
-\item{hyper_param}{mean and sd hyperparameters for roc data model}
+\item{fit_routine_obj}{brm-fit object}
 
 \item{time_index}{from the model fit}
 
