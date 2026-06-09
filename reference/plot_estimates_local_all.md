@@ -19,7 +19,8 @@ plot_estimates_local_all(
   output_folder = NULL,
   add_caption = FALSE,
   add_estimates = TRUE,
-  use_for_facetting = FALSE
+  use_for_facetting = FALSE,
+  plot_name = "fit"
 )
 ```
 
@@ -68,3 +69,7 @@ plot_estimates_local_all(
 
   Folder to save plots in, if save_plots is TRUE, to overwrite where
   plots are saved.
+
+- plot_name:
+
+  Plot name if saved as pdf. Defaults to "fit".

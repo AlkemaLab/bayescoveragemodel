@@ -32,19 +32,20 @@
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_se_logitprop.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_se_probitofinvprobitprop.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/get_standata_routine.html</loc></url>
-<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_anc1trimester.html</loc></url>
-<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_anc4.html</loc></url>
-<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_ancq8.html</loc></url>
-<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_bfexcl0_5.html</loc></url>
-<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_cci.html</loc></url>
-<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_ideliv.html</loc></url>
-<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_sba.html</loc></url>
-<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_vdpt.html</loc></url>
-<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit1b_vmsl.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_anc1trimester.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_anc4.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_ancq8.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_bfexcl0_5.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_cci.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_ideliv.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_sba.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_vdpt.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_vmsl.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/has_cmdstanr.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/has_rstan.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/identify_outliers_in_global_fit.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/index.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/init_fun.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/inv_probit.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/load_fit.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/lookup_t_stars_from_global_fit.html</loc></url>
@@ -56,6 +57,7 @@
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/process_data.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/regions_all.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/rename_output_folder.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/routinedata_add_roc_info.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/write_model.html</loc></url>
 </urlset>
 

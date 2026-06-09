@@ -5,7 +5,7 @@ Routine data mean uncertainty
 ## Usage
 
 ``` r
-get_logsigma_mean(fit_routineglobal, indicator, worst_combi)
+get_logsigma_mean(fit_routineglobal, indicator_name, worst_countdownmean)
 ```
 
 ## Arguments
@@ -14,11 +14,11 @@ get_logsigma_mean(fit_routineglobal, indicator, worst_combi)
 
   brms fit for error variance routine data
 
-- indicator:
+- indicator_name:
 
   name indicator
 
-- worst_combi:
+- worst_countdownmean:
 
   vector with value of data quality indicator, worst of start and end
   year for annual change

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bayescoveragemodel</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,25 +44,22 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_standata_routine</span><span class="op">(</span></span>
-<span>  <span class="va">service_statistic_df</span>,</span>
-<span>  <span class="va">hyper_param</span>,</span>
-<span>  <span class="va">time_index</span>,</span>
-<span>  <span class="va">geo_unit_index</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_standata_routine</span><span class="op">(</span><span class="va">routine_data</span>, <span class="va">fit_routine_obj</span>, <span class="va">time_index</span>, <span class="va">geo_unit_index</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-service-statistic-df">service_statistic_df<a class="anchor" aria-label="anchor" href="#arg-service-statistic-df"></a></dt>
-<dd><p>tibble with  iso; admin1 for subnat; routine; sd_routine; routine_roc; sd_routine_roc; year
-filtered to pop (eg country)</p></dd>
+<dl><dt id="arg-routine-data">routine_data<a class="anchor" aria-label="anchor" href="#arg-routine-data"></a></dt>
+<dd><p>tibble with  iso, year, indicator_name, routine_value, countdownmean
+routine_value is the value of the routine data (eg coverage) and
+countdownmean is the data quality indicator for that iso-year-indicator combi
+needs to be filtered to iso of interest</p></dd>
 
 
-<dt id="arg-hyper-param">hyper_param<a class="anchor" aria-label="anchor" href="#arg-hyper-param"></a></dt>
-<dd><p>mean and sd hyperparameters for roc data model</p></dd>
+<dt id="arg-fit-routine-obj">fit_routine_obj<a class="anchor" aria-label="anchor" href="#arg-fit-routine-obj"></a></dt>
+<dd><p>brm-fit object</p></dd>
 
 
 <dt id="arg-time-index">time_index<a class="anchor" aria-label="anchor" href="#arg-time-index"></a></dt>

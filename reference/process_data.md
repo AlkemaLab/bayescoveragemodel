@@ -5,7 +5,7 @@ Process survey data for a selected indicator
 ## Usage
 
 ``` r
-process_data(dat, regions_dat, indicator = "ideliv")
+process_data(dat, regions_dat, indicator = "ideliv", verbose = TRUE)
 ```
 
 ## Arguments
@@ -22,6 +22,10 @@ process_data(dat, regions_dat, indicator = "ideliv")
 - indicator:
 
   character, default "ideliv"
+
+- verbose:
+
+  logical, whether to print messages about data processing
 
 ## Value
 

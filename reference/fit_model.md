@@ -8,8 +8,6 @@ Fit the transition model to data.
 fit_model(
   survey_df,
   national_dat_df = NULL,
-  routine_df = NULL,
-  mean_log_sigma = NULL,
   popweights = NULL,
   y = "invprobit_indicator",
   se = "se_invprobit_indicator",
@@ -18,6 +16,7 @@ fit_model(
   area = "iso",
   iso_select = NULL,
   routine_data = NULL,
+  fit_routine_obj = NULL,
   start_year = 2000,
   end_year = 2030,
   runstep,
@@ -38,7 +37,6 @@ fit_model(
   model_name = "spline",
   held_out = FALSE,
   validation_cutoff_year = NULL,
-  validation_run = FALSE,
   save_post_summ = TRUE,
   generate_quantities = TRUE,
   get_posteriors = TRUE,
@@ -69,10 +67,6 @@ fit_model(
 
   tibble with survey data
 
-- routine_df:
-
-  tibble with routine data
-
 - y:
 
   column name of outcome.
@@ -98,6 +92,17 @@ fit_model(
 - iso_select:
 
   ISO code to use for local national run
+
+- routine_data:
+
+  data frame with routine data to use in the fit. If NULL (default), no
+  routine data will be used.
+
+- fit_routine_obj:
+
+  optional fit_routine object (e.g., from brms) containing
+  hyperparameters for routine data processing. If NULL (default), the
+  function will load the internal package data object `fit_routine`.
 
 - start_year:
 
@@ -177,16 +182,12 @@ fit_model(
 - held_out:
 
   binary vector indicating which observations are held out. Set to FALSE
-  to hold out no observations.
+  to hold out no observations. overwritten by validation_cutoff_year if
+  that is not NULL
 
 - validation_cutoff_year:
 
-  year to use for out-of-sample validation, overwrites held_out (to
-  confirm it does)
-
-- validation_run:
-
-  boolean indicator of whether it's a validation model run or not
+  year to use for out-of-sample validation, overwrites held_out
 
 - save_post_summ:
 

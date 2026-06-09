@@ -19,6 +19,8 @@ Functions for preparing data
   : Process survey data for a selected indicator
 - [`explore_data()`](https://alkemalab.github.io/bayescoveragemodel/reference/explore_data.md)
   : Explore Coverage Indicators Over Time
+- [`routinedata_add_roc_info()`](https://alkemalab.github.io/bayescoveragemodel/reference/routinedata_add_roc_info.md)
+  : Calculate Rate of Change and DQ Indicators
 
 ## Visualization & Output
 
