@@ -353,8 +353,8 @@ fit_model <- function(
     if (is.null(global_fit)){
       globalstepname <- dplyr::case_when(
         runstep == "step1b" ~ "1a",
-        runstep == "local_national" ~ "1b",
-        runstep == "global_subnational" ~ "1b",
+        runstep == "local_national" ~ "", # removed the 1b from globalfit
+        runstep == "global_subnational" ~ "",
         TRUE ~ "global_subnational"
       )
       # Get the global fit object from package data
@@ -1112,7 +1112,6 @@ fit_model <- function(
                            dplyr::select(any_of(c("iso", "admin1", "c"))))
       dat_routine <- combined_list$dat_routine # to use for plotting
       routine_list <- combined_list$routine_list # to pass into stan_data
-      print(combined_list)
   }
 
 

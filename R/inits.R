@@ -18,6 +18,13 @@
 # #sort_columns(a)
 
 
+#' Inits function
+#'
+#' @param chain_id Chain ID
+#' @param stan_data Stan data list, used to determine which parameters to initialize and their dimensions
+#'
+#' @returns List of initial values for Stan parameters, with dimensions matching the model specification
+#' @keywords internal
 init_fun <- function(chain_id, stan_data){
 
   #k <- stan_data$num_basis - stan_data$num_constrained_zero

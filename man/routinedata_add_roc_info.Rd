@@ -54,7 +54,7 @@ toy_data <- data.frame(
   iso = rep(c("CD1", "CD2"), each = 3),
   year = rep(2020:2022, 2),
   indicator_name = "dtp3",
-  routine_value = c(85, 87, 90, 80, 82, 85),
+  routine_value = c(0.85, 0.87, 0.90, 0.80, 0.82, 0.85),
   median_estimate = c(88, 89, 91, 83, 84, 87),
   notoutliers = c(100, 95, 90, 100, 100, 95),
   notmissing = c(100, 100, 95, 100, 95, 90),
