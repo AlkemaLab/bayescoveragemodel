@@ -17,7 +17,8 @@ plot_estimates_local_all(
   output_folder = NULL,
   add_caption = FALSE,
   add_estimates = TRUE,
-  use_for_facetting = FALSE
+  use_for_facetting = FALSE,
+  plot_name = "fit"
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ plot_estimates_local_all(
 \item{save_plots}{Boolean indicator, if set to TRUE plots will be saved in output directory of results fit.}
 
 \item{output_folder}{Folder to save plots in, if save_plots is TRUE, to overwrite where plots are saved.}
+
+\item{plot_name}{Plot name if saved as pdf. Defaults to "fit".}
 }
 \description{
 Plot model fits, with options to add routine data or additional fits for comparison.

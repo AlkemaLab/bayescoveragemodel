@@ -61,20 +61,20 @@ get_convergence_diagnostics <- function(fit, model_name = "spline"){
     message(sprintf("Tail ESS adequate (min = %.0f)", min_ess_tail))
   }
 
-  print("saving some densities")
-  plot_dirandnameb <- file.path(fit$output_dir, "diagnostics.pdf")
-  pdf(plot_dirandnameb, width = 11, height = 11)
-  for (i in 1:length(parnames)){
-    parname <- parnames[i]
-    samp <- extract_draws(fit, parname)
-    # can produce trace plots too
-    #mcmc_trace(samp)
-    p <- mcmc_dens_overlay(samp)
-    # for more than 1 parameter
-    #mcmc_pairs(samp)
-    print(p)
-  }
-  dev.off()
+  # print("saving some densities")
+  # plot_dirandnameb <- file.path(fit$output_dir, "diagnostics.pdf")
+  # pdf(plot_dirandnameb, width = 11, height = 11)
+  # for (i in 1:length(parnames)){
+  #   parname <- parnames[i]
+  #   samp <- extract_draws(fit, parname)
+  #   # can produce trace plots too
+  #   #mcmc_trace(samp)
+  #   p <- mcmc_dens_overlay(samp)
+  #   # for more than 1 parameter
+  #   #mcmc_pairs(samp)
+  #   print(p)
+  # }
+  # dev.off()
 
   return(NULL)
 }

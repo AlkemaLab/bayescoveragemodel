@@ -4,14 +4,14 @@
 \alias{get_logsigma_mean}
 \title{Routine data mean uncertainty}
 \usage{
-get_logsigma_mean(fit_routineglobal, indicator, worst_combi)
+get_logsigma_mean(fit_routineglobal, indicator_name, worst_countdownmean)
 }
 \arguments{
 \item{fit_routineglobal}{brms fit for error variance routine data}
 
-\item{indicator}{name indicator}
+\item{indicator_name}{name indicator}
 
-\item{worst_combi}{vector with value of data quality indicator,
+\item{worst_countdownmean}{vector with value of data quality indicator,
 worst of start and end year for annual change}
 }
 \value{

@@ -7,8 +7,6 @@
 fit_model(
   survey_df,
   national_dat_df = NULL,
-  routine_df = NULL,
-  mean_log_sigma = NULL,
   popweights = NULL,
   y = "invprobit_indicator",
   se = "se_invprobit_indicator",
@@ -17,6 +15,7 @@ fit_model(
   area = "iso",
   iso_select = NULL,
   routine_data = NULL,
+  fit_routine_obj = NULL,
   start_year = 2000,
   end_year = 2030,
   runstep,
@@ -37,7 +36,6 @@ fit_model(
   model_name = "spline",
   held_out = FALSE,
   validation_cutoff_year = NULL,
-  validation_run = FALSE,
   save_post_summ = TRUE,
   generate_quantities = TRUE,
   get_posteriors = TRUE,
@@ -64,8 +62,6 @@ fit_model(
 \arguments{
 \item{survey_df}{tibble with survey data}
 
-\item{routine_df}{tibble with routine data}
-
 \item{y}{column name of outcome.}
 
 \item{se}{column name of outcome standard error.}
@@ -79,6 +75,12 @@ fit_model(
 for subnational:}
 
 \item{iso_select}{ISO code to use for local national run}
+
+\item{routine_data}{data frame with routine data to use in the fit. If NULL (default), no routine data will be used.}
+
+\item{fit_routine_obj}{optional fit_routine object (e.g., from brms) containing
+hyperparameters for routine data processing. If NULL (default), the function
+will load the internal package data object \code{fit_routine}.}
 
 \item{start_year}{start year of estimates.}
 
@@ -122,11 +124,10 @@ asymptote (see Details).}
 \item \code{"rw2"}: Local rate of change model, ARIMA(1,2,0)
 }}
 
-\item{held_out}{binary vector indicating which observations are held out. Set to FALSE to hold out no observations.}
+\item{held_out}{binary vector indicating which observations are held out. Set to FALSE to hold out no observations.
+overwritten by validation_cutoff_year if that is not NULL}
 
-\item{validation_cutoff_year}{year to use for out-of-sample validation, overwrites held_out (to confirm it does)}
-
-\item{validation_run}{boolean indicator of whether it's a validation model run or not}
+\item{validation_cutoff_year}{year to use for out-of-sample validation, overwrites held_out}
 
 \item{save_post_summ}{boolean indicator of whether to save summary object (does NOT work for rstan backend)}
 

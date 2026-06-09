@@ -96,7 +96,7 @@ extract_summary <- function(fit, variables, funs = NULL, .cores = 1) {
     # rstan: use summary() or compute from draws
     if (is.null(funs)) {
       # Use rstan's built-in summary
-      summ <- summary(fit$samples, pars = variables)$summary
+      summ <- rstan::summary(fit$samples, pars = variables)$summary
       return(tibble::as_tibble(summ, rownames = "variable"))
 
     } else {

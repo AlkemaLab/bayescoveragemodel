@@ -3,7 +3,6 @@
 #' Fit the transition model to data.
 #'
 #' @param survey_df tibble with survey data
-#' @param routine_df tibble with routine data
 #' @param y column name of outcome.
 #' @param se column name of outcome standard error.
 #' @param year column name of outcome year.
@@ -48,11 +47,15 @@
 #'     \item \code{"rw2"}: Local rate of change model, ARIMA(1,2,0)
 #'   }
 #'
+#' @param routine_data data frame with routine data to use in the fit. If NULL (default), no routine data will be used.
+#' @param fit_routine_obj optional fit_routine object (e.g., from brms) containing
+#'   hyperparameters for routine data processing. If NULL (default), the function
+#'   will load the internal package data object \code{fit_routine}.
 #' @param get_posteriors boolean indicator of whether to return posterior samples
 #'
 #' @param held_out binary vector indicating which observations are held out. Set to FALSE to hold out no observations.
-#' @param validation_cutoff_year year to use for out-of-sample validation, overwrites held_out (to confirm it does)
-#' @param validation_run boolean indicator of whether it's a validation model run or not
+#' overwritten by validation_cutoff_year if that is not NULL
+#' @param validation_cutoff_year year to use for out-of-sample validation, overwrites held_out
 #'
 #' @param generate_quantities binary vector indicating whether to simulate data from the fitted model
 #' @param stan_file_path stan file path (if NULL, uses internal stan file)
@@ -182,8 +185,6 @@ fit_model <- function(
   survey_df,
   national_dat_df = NULL, # relevant only for subnat runs, national data to be considered
   # needs to be filtered to iso_select
-  routine_df = NULL,
-  mean_log_sigma = NULL, # if provided, overwrites the stored parameter
   popweights  = NULL, #a tibble with columns iso, admin1, year, prop
   #population_data = NULL,
   y = "invprobit_indicator",
@@ -194,6 +195,7 @@ fit_model <- function(
   area = "iso",
   iso_select  = NULL, # used for local national run
   routine_data = NULL,
+  fit_routine_obj = NULL, # optional fit_routine object; if NULL, loads from internal package data
   # years to produce estimates for
   start_year = 2000,
   end_year = 2030,
@@ -239,7 +241,6 @@ fit_model <- function(
   # Out-of-sample validation
   held_out = FALSE,
   validation_cutoff_year = NULL, # if not NULL, should be a year and is used to define/overwrite held_out set
-  validation_run = FALSE,
 
   save_post_summ = TRUE, # added to be able to NOT save results in a step1a etc run
 
@@ -352,8 +353,8 @@ fit_model <- function(
     if (is.null(global_fit)){
       globalstepname <- dplyr::case_when(
         runstep == "step1b" ~ "1a",
-        runstep == "local_national" ~ "1b",
-        runstep == "global_subnational" ~ "1b",
+        runstep == "local_national" ~ "", # removed the 1b from globalfit
+        runstep == "global_subnational" ~ "",
         TRUE ~ "global_subnational"
       )
       # Get the global fit object from package data
@@ -515,9 +516,11 @@ fit_model <- function(
   }
   if(length(held_out) == 1 && held_out == FALSE) {
     held_out = rep(0, nrow(data))
+    validation_run <- FALSE
   }  else {
     if(length(held_out) != nrow(data)) stop(glue::glue("held_out (length {length(held_out)}) must be same size as dataset ({nrow(data)} rows)."))
     held_out = as.numeric(held_out)
+    validation_run <- TRUE
   }
   data$held_out <- held_out
 
@@ -1087,57 +1090,30 @@ fit_model <- function(
     dat_routine <- NULL
     routine_list <- NULL
   } else {
-    #hyper_param <- readRDS(here::here("data_raw/internal/", paste0("routine_hyperparameters_", indicator, ".rds")))
-    #hyper_param <- get(paste0("routine_hyperparameters_", indicator))
-
-    # step 1: add log_sigma_mean_routine_roc to the service_stats_df
-    # fit_routine is internal data - load it from package data
-    fit_routine_obj <- tryCatch({
-      temp_env <- new.env()
-      data(list = "fit_routine", package = "bayescoveragemodel", envir = temp_env)
-      temp_env[["fit_routine"]]
-    }, error = function(e) {
-      stop(paste0(
-        "Internal data object 'fit_routine' not found in package data.\n",
-        "This is required for processing routine data.\n",
-        "Original error: ", e$message
-      ))
-    })
-
-    routine_data$log_sigma_mean_routine_roc <-
-      get_logsigma_mean(fit_routineglobal = fit_routine_obj,
-                        indicator = routine_data$indicator_name,
-                        worst_combi = routine_data$worst_combi
-      )
-    # used to have mean_log_sigma, hierarchical_sigma
-    # now just hierarchuical sigma is used
-    vc <- brms::VarCorr(fit_routine_obj)
-    sd_country <- vc$country$sd[, "Estimate"]
-    names(sd_country) <-  gsub("sigma_indicator_name", "", rownames(vc$country$sd))
-    #sd_country
-    routine_hyperparameters <- tibble::tibble(
-      mean_log_sigma = 0,
-      hierarchical_sigma = sd_country[routine_data$indicator_name[1]]
-    )
-    # print(routine_hyperparameters)
-    # assign(paste0("routine_hyperparameters_", indicator_select),
-    #        routine_hyperparameters,
-    #        envir = .GlobalEnv)
-
-    combined_list <- get_standata_routine(
-                          service_statistic_df = routine_data,
-                          hyper_param = routine_hyperparameters,
-                          time_index = time_index,
-                          geo_unit_index = geo_unit_index |>
-                            dplyr::select(any_of(c("iso", "admin1", "c")))
-                    )
+    # claude to do: when NOT loading dplyr, something goes wrong in this else statement
+    # do you see what?
+    # If fit_routine_obj not provided, load from internal package data
+    if (is.null(fit_routine_obj)) {
+      fit_routine_obj <- tryCatch({
+        temp_env <- new.env()
+        data(list = "fit_routine", package = "bayescoveragemodel", envir = temp_env)
+        temp_env[["fit_routine"]]
+      }, error = function(e) {
+        stop(paste0(
+          "Internal data object 'fit_routine' not found in package data.\n",
+          "This is required for processing routine data.\n",
+          "Original error: ", e$message
+        ))
+      })
+    }
+    # get stan data
+    combined_list <- get_standata_routine(routine_data = routine_data,
+                         fit_routine_obj = fit_routine_obj,
+                         time_index = time_index,
+                         geo_unit_index = geo_unit_index |>
+                           dplyr::select(dplyr::any_of(c("iso", "admin1", "c"))))
       dat_routine <- combined_list$dat_routine # to use for plotting
       routine_list <- combined_list$routine_list # to pass into stan_data
-      if (!is.null(mean_log_sigma)){
-        routine_list$mean_log_sigma <- mean_log_sigma
-      }
-
-
   }
 
 
@@ -1455,8 +1431,8 @@ fit_model <- function(
       iter = iter_sampling + iter_warmup,
       warmup = iter_warmup,
       seed = seed,
-      # for testing
-      verbose = TRUE,
+      verbose = FALSE,
+      show_messages = FALSE,
       refresh = refresh,
       control = list(adapt_delta = adapt_delta,
                      max_treedepth = max_treedepth)

@@ -10,6 +10,7 @@
 #' @param iso_codes Optional character vector of ISO codes to plot. If NULL, plots all countries.
 #' @param save_plots Boolean indicator, if set to TRUE plots will be saved in output directory of results fit.
 #' @param output_folder Folder to save plots in, if save_plots is TRUE, to overwrite where plots are saved.
+#' @param plot_name Plot name if saved as pdf. Defaults to "fit".
 #'
 #' @export
 plot_estimates_local_all <- function(results,
@@ -24,10 +25,9 @@ plot_estimates_local_all <- function(results,
                                      output_folder = NULL,
                                      add_caption = FALSE,
                                      add_estimates = TRUE,
-                                     use_for_facetting = FALSE){
+                                     use_for_facetting = FALSE,
+                                     plot_name = "fit"){
 
-
-  plot_name <- "fit"
 
   plot_caption <- "Survey data from DHS and MICS are shown in red and blue, with vertical bars indicating how uncertain each survey point is.\nIf available, routine data from CAM2024 are shown in black. The lines represent the model's point estimates with shaded areas\nhighlighting uncertainty (in red if routine data were included, black/green otherwise)."
 
