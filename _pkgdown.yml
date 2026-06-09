@@ -29,6 +29,7 @@ reference:
     contents:
       - process_data
       - explore_data
+      - routinedata_add_roc_info
   - title: "Visualization & Output"
     desc: Functions for plotting and model comparison
     contents:

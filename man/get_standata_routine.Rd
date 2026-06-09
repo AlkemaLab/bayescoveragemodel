@@ -24,3 +24,4 @@ list with dat_routine (for plotting) and routine_list (to pass to stan)
 \description{
 get_standata_routine
 }
+\keyword{internal}

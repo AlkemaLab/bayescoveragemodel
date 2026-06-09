@@ -11,7 +11,7 @@
 #' @param geo_unit_index from the model fit
 #'
 #' @returns list with dat_routine (for plotting) and routine_list (to pass to stan)
-#' @export
+#' @keywords internal
 #'
 get_standata_routine <- function(routine_data,
                                  fit_routine_obj,
