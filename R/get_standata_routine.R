@@ -98,7 +98,7 @@ get_logsigma_mean <- function(fit_routineglobal,
                               worst_countdownmean){
   log(fitted(fit_routineglobal,
              newdata =
-               tibble(
+               tibble::tibble(
                  indicator_name = indicator_name,
                  worst_countdownmean = worst_countdownmean,
                  country = NA),

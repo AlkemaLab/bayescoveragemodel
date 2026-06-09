@@ -1090,6 +1090,8 @@ fit_model <- function(
     dat_routine <- NULL
     routine_list <- NULL
   } else {
+    # claude to do: when NOT loading dplyr, something goes wrong in this else statement
+    # do you see what?
     # If fit_routine_obj not provided, load from internal package data
     if (is.null(fit_routine_obj)) {
       fit_routine_obj <- tryCatch({
@@ -1109,7 +1111,7 @@ fit_model <- function(
                          fit_routine_obj = fit_routine_obj,
                          time_index = time_index,
                          geo_unit_index = geo_unit_index |>
-                           dplyr::select(any_of(c("iso", "admin1", "c"))))
+                           dplyr::select(dplyr::any_of(c("iso", "admin1", "c"))))
       dat_routine <- combined_list$dat_routine # to use for plotting
       routine_list <- combined_list$routine_list # to pass into stan_data
   }
@@ -1429,8 +1431,8 @@ fit_model <- function(
       iter = iter_sampling + iter_warmup,
       warmup = iter_warmup,
       seed = seed,
-      # for testing
-      verbose = TRUE,
+      verbose = FALSE,
+      show_messages = FALSE,
       refresh = refresh,
       control = list(adapt_delta = adapt_delta,
                      max_treedepth = max_treedepth)

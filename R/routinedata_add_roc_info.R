@@ -63,16 +63,18 @@ routinedata_add_roc_info <- function(data,
 
   # Start with the data
   result <- data |>
-    arrange(iso, year) |>
-    group_by(iso, indicator_name)
+    dplyr::arrange(iso, year) |>
+    dplyr::group_by(iso, indicator_name)
 
   # Build expressions for mutate
   mutate_exprs <- list()
 
-  mutate_exprs$routine_roc <- quote(ifelse((year - lag(year)) == 1, routine_value - lag(routine_value), NA))
+  mutate_exprs$routine_roc <- quote(ifelse((year - dplyr::lag(year)) == 1,
+                                           routine_value - dplyr::lag(routine_value), NA))
   # Add est_roc if requested
   if (add_est_roc) {
-    mutate_exprs$est_roc <- quote(ifelse((year - lag(year)) == 1, median_estimate - lag(median_estimate), NA))
+    mutate_exprs$est_roc <- quote(ifelse((year - dplyr::lag(year)) == 1,
+                                         median_estimate - dplyr::lag(median_estimate), NA))
   }
 
   # Combine all DQ covariates
@@ -82,7 +84,7 @@ routinedata_add_roc_info <- function(data,
   for (var in all_dq_covariates) {
     var_sym <- as.symbol(var)
     start_name <- paste0(var, "_start")
-    mutate_exprs[[start_name]] <- bquote(ifelse((year - lag(year)) == 1, lag(.(var_sym)), NA))
+    mutate_exprs[[start_name]] <- bquote(ifelse((year - dplyr::lag(year)) == 1, dplyr::lag(.(var_sym)), NA))
   }
 
   # Add worst versions using pmin
@@ -112,8 +114,8 @@ routinedata_add_roc_info <- function(data,
   # Apply all mutations
   result <-
     result |>
-    mutate(!!!mutate_exprs) |>
-    ungroup()
+    dplyr::mutate(!!!mutate_exprs) |>
+    dplyr::ungroup()
 
   return(result)
 }

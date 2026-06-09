@@ -4,7 +4,7 @@
 \alias{process_data}
 \title{Process survey data for a selected indicator}
 \usage{
-process_data(dat, regions_dat, indicator = "ideliv")
+process_data(dat, regions_dat, indicator = "ideliv", verbose = TRUE)
 }
 \arguments{
 \item{dat}{data frame with iso, year, indic, r (indicator), se, source, final_year columns}
@@ -12,6 +12,8 @@ process_data(dat, regions_dat, indicator = "ideliv")
 \item{regions_dat}{data frame with iso and cluster columns}
 
 \item{indicator}{character, default "ideliv"}
+
+\item{verbose}{logical, whether to print messages about data processing}
 }
 \value{
 processed data frame
