@@ -1,20 +1,33 @@
 
+#' Plot subnational comparison
+#'
+#' @param results Model fit.
+#' @param results2 Option model fit 2. If NULL, only one model will be plotted.
+#' @param model_names Optional names for the models to be plotted.
+#' Should be of length 2 if results2 is not NULL, otherwise length 1.
+#' @param year_select Year to plot. Should be a single value.
+#' @param ymin_select Minimum y-axis value. Default is 0.
+#' @param ymax_select Maximum y-axis value. Default is NA (no limit).
+#' @param arrange_point Boolean to arrange points by median value. Default is TRUE.
+#'
+#' @returns ggplot object with comparison plot
+#' @export
 plot_subnational_comparison <- function(results,
-                                        results_woroutine = NULL,
-                                        model_names = c("Model w routine data",
-                                                        "Model w/o routine data"),
+                                        results2 = NULL,
+                                        model_names = c("Bayesian Model 1",
+                                                        "Bayesian Model 2"),
                                         year_select,
                                         ymin_select = 0, ymax_select = NA,
                                         arrange_point = TRUE) {
 
-  if (is.null(results_woroutine)){
+  if (is.null(results2)){
     results_all <- results$posteriors$temporal|>
       dplyr::mutate(model = model_names[1])
   } else {
     results_all <- results$posteriors$temporal |>
           dplyr::mutate(model = model_names[1]) |>
       dplyr::bind_rows(
-        results_woroutine$posteriors$temporal |>
+        results2$posteriors$temporal |>
           dplyr::mutate(model = model_names[2]))
   }
   res <- results_all |>
@@ -38,7 +51,7 @@ plot_subnational_comparison <- function(results,
 
   if (arrange_point){
     res <-  res |>
-      dplyr::mutate(region_code = fct_reorder(region_code, median))
+      dplyr::mutate(region_code = forcats::fct_reorder(region_code, median))
   }
   res |>
     ggplot2::ggplot(ggplot2::aes(x = region_code, y = median,
@@ -48,7 +61,7 @@ plot_subnational_comparison <- function(results,
            #,
     )) +
     ggplot2::geom_pointrange(ggplot2::aes(ymin = `2.5%`, ymax = `97.5%`),
-                             position=position_dodge(width = 0.5) #"dodge2"
+                             position = ggplot2::position_dodge(width = 0.5) #"dodge2"
     ) +
     ggplot2::theme_minimal() +
     ggplot2::labs(x = "Region", y = "Proportion",
@@ -82,7 +95,7 @@ plot_subnational_comparison_acrossyears <- function(results,
 
   if (arrange_point){
     res <-  res |>
-      dplyr::mutate(region_code = fct_reorder(region_code, median))
+      dplyr::mutate(region_code = forcats::fct_reorder(region_code, median))
   }
   res |>
     ggplot2::ggplot(ggplot2::aes(x = region_code, y = median,
@@ -92,7 +105,7 @@ plot_subnational_comparison_acrossyears <- function(results,
                                  #,
     )) +
     ggplot2::geom_pointrange(ggplot2::aes(ymin = `2.5%`, ymax = `97.5%`),
-                             position=position_dodge(width = 0.5) #"dodge2"
+                             position = ggplot2::position_dodge(width = 0.5) #"dodge2"
     ) +
     ggplot2::theme_minimal() +
     ggplot2::labs(x = "Region", y = "Proportion",

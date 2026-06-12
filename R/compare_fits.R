@@ -32,7 +32,7 @@
 #' plots <- compare_fits(
 #'   runnames = c("vdpt_step1b_run_alldata_jan16", "vdpt_step1b_val_alldata_jan16"),
 #'   modelnames = c("Full model", "Validation"),
-#'   iso_codes = c("ETH", "GHA", "KEN", "NGA", "UGA")
+#'   region_codes = c("ETH", "GHA", "KEN", "NGA", "UGA")
 #' )
 #' }
 compare_fits <- function(runnames,

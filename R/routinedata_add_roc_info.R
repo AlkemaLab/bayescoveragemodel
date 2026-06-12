@@ -61,10 +61,14 @@ routinedata_add_roc_info <- function(data,
                                      dq_covariates_max = c(),
                                      dq_covariates_max_abs = c()) {
 
-  # Start with the data
+  # need to arrange by iso for national, for admin1 for subnational
+  region_cols <- c("iso", "admin1")
+  region_cols <- intersect(region_cols, names(data))
+
   result <- data |>
-    dplyr::arrange(iso, year) |>
-    dplyr::group_by(iso, indicator_name)
+    dplyr::arrange(dplyr::across(dplyr::all_of(region_cols)), year) |>
+    dplyr::group_by(dplyr::all_of(region_cols), indicator_name)
+
 
   # Build expressions for mutate
   mutate_exprs <- list()

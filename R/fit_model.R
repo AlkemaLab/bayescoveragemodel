@@ -287,7 +287,8 @@ fit_model <- function(
   }
 
 
-  add_aggregates <- ifelse(runstep == "local_subnational", TRUE, FALSE)
+  # no aggregates calculated as per June 2026
+  add_aggregates <- FALSE # ifelse(runstep == "local_subnational", TRUE, FALSE)
 
   # if we need aggregates, process national data
   if (add_aggregates & !is.null(national_dat_df)){
@@ -355,7 +356,7 @@ fit_model <- function(
         runstep == "step1b" ~ "1a",
         runstep == "local_national" ~ "", # removed the 1b from globalfit
         runstep == "global_subnational" ~ "",
-        TRUE ~ "global_subnational"
+        TRUE ~ "_global_subnational"
       )
       # Get the global fit object from package data
       # Use data() to load lazy-loaded package data
@@ -450,7 +451,7 @@ fit_model <- function(
 
     # subnational
     if (runstep %in% c("local_subnational", "global_subnational")){
-      print("TMP solution: we do a subnational run but we set subational to false to not deal with aggregates ")
+      #print("TMP solution: we do a subnational run but we set subational to false to not deal with aggregates ")
       subnational = FALSE #TRUE
       print("We use subnational data.")
       area = "admin1" #"region_code"
@@ -491,7 +492,7 @@ fit_model <- function(
     }
   }
 
-  if (runstep %in% c("local_national", "local_subnational")){
+  if (runstep %in% c("local_national", "global_subnational", "local_subnational")){
     # for some indicators, do fitting just from 2010 onwards
     if (global_fit$data_from2010only){
       print("We fit to survey data from 2010 onwards.")
@@ -1090,8 +1091,6 @@ fit_model <- function(
     dat_routine <- NULL
     routine_list <- NULL
   } else {
-    # claude to do: when NOT loading dplyr, something goes wrong in this else statement
-    # do you see what?
     # If fit_routine_obj not provided, load from internal package data
     if (is.null(fit_routine_obj)) {
       fit_routine_obj <- tryCatch({
@@ -1337,6 +1336,9 @@ fit_model <- function(
     # fix_subnat_corr = fix_subnat_corr,
     correlated_smoothing = correlated_smoothing
   )
+  if (runstep == "global_subnational"){
+    result$data_from2010only <- global_fit$data_from2010only
+  }
   result <- c(result,
               # hier_data needs to be unlisted in result
               hier_data)
@@ -1446,7 +1448,12 @@ fit_model <- function(
   result$samples <- fit
 
   result$data <- add_uncertainty_in_obs(result)
-  if (runstep %in% "local_subnational"){
+
+
+  if (add_aggregates &
+      runstep %in% "local_subnational" &
+      # only if there were national data considered
+      (!is.null(result$national_dat_df) | any(is.na(result$data$admin1)))){
     # fix national obs
     # rename NA as national in obs
     # making sure that data are plotted
@@ -1455,7 +1462,7 @@ fit_model <- function(
       dplyr::mutate(admin1 = ifelse(is.na(admin1), "National", admin1)) |>
       # data not used in fitting
       dplyr::bind_rows(result$national_dat_df |>
-                dplyr::mutate(admin1 = "National", est_indicator = indicator, held_out = 0))
+                         dplyr::mutate(admin1 = "National", est_indicator = indicator, held_out = 0))
   }
 
   if (get_posteriors){

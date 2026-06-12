@@ -12,7 +12,7 @@ plot_estimates_local_all(
   results3 = NULL,
   results4 = NULL,
   modelnames = c("model1", "model2", "model3", "model4"),
-  iso_codes = NULL,
+  region_codes = NULL,
   save_plots = FALSE,
   output_folder = NULL,
   add_caption = FALSE,
@@ -36,7 +36,7 @@ plot_estimates_local_all(
 
 \item{modelnames}{Optional names of the models to display in the plot legend.}
 
-\item{iso_codes}{Optional character vector of ISO codes to plot. If NULL, plots all countries.}
+\item{region_codes}{Optional character vector of region codes to plot (ISO or admin1). If NULL, plots all regions.}
 
 \item{save_plots}{Boolean indicator, if set to TRUE plots will be saved in output directory of results fit.}
 

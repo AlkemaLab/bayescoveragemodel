@@ -1,6 +1,6 @@
 #' get_standata_routine
 #'
-#' @param routine_data tibble with  iso, year, indicator_name, routine_value, countdownmean
+#' @param routine_data tibble with  iso OR admin1 name, year, indicator_name, routine_value, countdownmean
 #' routine_value is the value of the routine data (eg coverage) and
 #' countdownmean is the data quality indicator for that iso-year-indicator combi
 #' needs to be filtered to iso of interest

@@ -1,4 +1,38 @@
 
+#' Global subnational fit object globalfit_global_subnational_cci
+#'
+#' @format ## `globalfit_global_subnational_cci`
+#' list with global fit objects including
+#' \describe{
+#'   \item{post_summ}{data frame with posterior summaries for relevant parameters}
+#'   \item{geo_unit_index}{data frame with geo_unit info}
+#'   \item{source_index}{data frame with sources of survey data with indices used in the model}
+#'   \item{time_index}{data frame with TIME info}
+#'   \item{other settings}{spline settings, t_star, etc}
+#'   \item{data_from2010only}{logical indicating to fit to data from 2010 onwards only (TRUE) or with all available data (FALSE)}
+#'   }
+#' @source global fit 2026
+#' @keywords internal
+"globalfit_global_subnational_cci"
+
+
+#' Global subnational fit object globalfit_global_subnational_anc4
+#'
+#' @format ## `globalfit_global_subnational_anc4`
+#' list with global fit objects including
+#' \describe{
+#'   \item{post_summ}{data frame with posterior summaries for relevant parameters}
+#'   \item{geo_unit_index}{data frame with geo_unit info}
+#'   \item{source_index}{data frame with sources of survey data with indices used in the model}
+#'   \item{time_index}{data frame with TIME info}
+#'   \item{other settings}{spline settings, t_star, etc}
+#'   \item{data_from2010only}{logical indicating to fit to data from 2010 onwards only (TRUE) or with all available data (FALSE)}
+#'   }
+#' @source global fit 2026
+#' @keywords internal
+"globalfit_global_subnational_anc4"
+
+
 #' Global fit object globalfit_anc4
 #'
 #'
@@ -15,6 +49,8 @@
 #' @source global fit 2026
 #' @keywords internal
 "globalfit_anc4"
+
+
 
 #' Global fit object globalfit_bfexcl0_5
 #'

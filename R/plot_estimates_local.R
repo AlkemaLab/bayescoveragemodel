@@ -7,7 +7,7 @@
 #' @param results3 Optional third model fit.
 #' @param results4 Optional fourth model fit.
 #' @param modelnames Optional names of the models to display in the plot legend.
-#' @param iso_codes Optional character vector of ISO codes to plot. If NULL, plots all countries.
+#' @param region_codes Optional character vector of region codes to plot (ISO or admin1). If NULL, plots all regions.
 #' @param save_plots Boolean indicator, if set to TRUE plots will be saved in output directory of results fit.
 #' @param output_folder Folder to save plots in, if save_plots is TRUE, to overwrite where plots are saved.
 #' @param plot_name Plot name if saved as pdf. Defaults to "fit".
@@ -20,7 +20,7 @@ plot_estimates_local_all <- function(results,
                                      results3 = NULL,
                                      results4 = NULL,
                                      modelnames =  c("model1", "model2", "model3", "model4"),
-                                     iso_codes = NULL,
+                                     region_codes = NULL,
                                      save_plots = FALSE,
                                      output_folder = NULL,
                                      add_caption = FALSE,
@@ -50,12 +50,12 @@ plot_estimates_local_all <- function(results,
   }
 
  # Filter to requested ISO codes if provided
-  if (!is.null(iso_codes)) {
-    missing_codes <- iso_codes[!iso_codes %in% country_codes]
+  if (!is.null(region_codes)) {
+    missing_codes <- region_codes[!region_codes %in% country_codes]
     if (length(missing_codes) > 0) {
-      warning("Some iso_codes not found in fit: ", paste(missing_codes, collapse = ", "))
+      warning("Some region_codes not found in fit: ", paste(missing_codes, collapse = ", "))
     }
-    country_codes <- country_codes[country_codes %in% iso_codes]
+    country_codes <- country_codes[country_codes %in% region_codes]
     if (length(country_codes) == 0) {
       stop("None of the requested iso_codes found in the fit.")
     }
@@ -137,7 +137,7 @@ plot_estimates_local_all <- function(results,
     }
 
     if (!is.null(filtered_data)){
-      plot_title <- ifelse(subnational, filtered_data |> dplyr::pull(level) |> unique(), filtered_data |> dplyr::pull(country) |> unique())
+      plot_title <- ifelse(subnational, filtered_data |> dplyr::pull(admin1) |> unique(), filtered_data |> dplyr::pull(country) |> unique())
       iso_select <- filtered_data$iso[1]
     } else {
       plot_title <- country_codes[i]
