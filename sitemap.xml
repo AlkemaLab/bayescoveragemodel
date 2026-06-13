@@ -37,6 +37,8 @@
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_ancq8.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_bfexcl0_5.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_cci.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_global_subnational_anc4.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_global_subnational_cci.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_ideliv.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_sba.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/globalfit_vdpt.html</loc></url>
@@ -53,6 +55,7 @@
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/plot_estimates_local.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/plot_estimates_local_all.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/plot_hierchecks.html</loc></url>
+<url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/plot_subnational_comparison.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/probit.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/process_data.html</loc></url>
 <url><loc>https://alkemalab.github.io/bayescoveragemodel/reference/regions_all.html</loc></url>

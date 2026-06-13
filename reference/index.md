@@ -33,6 +33,8 @@ Functions for plotting and model comparison
   : Plot hierarchical model checks
 - [`compare_fits()`](https://alkemalab.github.io/bayescoveragemodel/reference/compare_fits.md)
   : Compare multiple model fits in a single plot
+- [`plot_subnational_comparison()`](https://alkemalab.github.io/bayescoveragemodel/reference/plot_subnational_comparison.md)
+  : Plot subnational comparison
 
 ## Diagnostics
 
