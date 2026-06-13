@@ -36,6 +36,7 @@ reference:
       - plot_estimates_local_all
       - plot_hierchecks
       - compare_fits
+      - plot_subnational_comparison
   - title: "Diagnostics"
     desc: Functions for convergence and model checking
     contents:
