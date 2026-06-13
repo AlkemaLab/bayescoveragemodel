@@ -65,7 +65,7 @@ plot_subnational_comparison <- function(results,
     ) +
     ggplot2::theme_minimal() +
     ggplot2::labs(x = "Region", y = "Proportion",
-                  title = paste0(res$iso[1], " - ", gsub("_", " ", indicator_select), ", ", year_select)) +
+                  title = paste0(res$iso[1], " - ", gsub("_", " ", results$indicator), ", ", year_select)) +
     ggplot2::ylim(ymin_select, ymax_select) +
     #ggplot2::theme(legend.position = "none") +
     #guides(color = guide_legend(title="New Legend Title"))
@@ -109,7 +109,7 @@ plot_subnational_comparison_acrossyears <- function(results,
     ) +
     ggplot2::theme_minimal() +
     ggplot2::labs(x = "Region", y = "Proportion",
-                  title = paste0(res$iso[1], " - ", gsub("_", " ", indicator_select), ", ", year_select)) +
+                  title = paste0(res$iso[1], " - ", gsub("_", " ", results$indicator), ", ", year_select)) +
     ggplot2::ylim(ymin_select, ymax_select) +
     #ggplot2::theme(legend.position = "none") +
     #guides(color = guide_legend(title="New Legend Title"))

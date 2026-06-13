@@ -1,6 +1,6 @@
 Package: bayescoveragemodel
 Title: Bayesian Transition Models for Estimating and Forecasting Health Coverage Indicators
-Version: 0.14
+Version: 0.141
 Authors@R: c(
     person("Leontine", "Alkema", , "lalkema@umass.edu", role = c("aut", "cre")),
     person("Shauna", "Mooney", role = "aut"),
