@@ -21,12 +21,13 @@ Source:
 
 Alkema L, Mooney S (2026). *bayescoveragemodel: Bayesian Transition
 Models for Estimating and Forecasting Health Coverage Indicators*. R
-package version 0.15, <https://alkemalab.github.io/bayescoveragemodel/>.
+package version 0.151,
+<https://alkemalab.github.io/bayescoveragemodel/>.
 
     @Manual{,
       title = {bayescoveragemodel: Bayesian Transition Models for Estimating and Forecasting Health Coverage Indicators},
       author = {Leontine Alkema and Shauna Mooney},
       year = {2026},
-      note = {R package version 0.15},
+      note = {R package version 0.151},
       url = {https://alkemalab.github.io/bayescoveragemodel/},
     }
