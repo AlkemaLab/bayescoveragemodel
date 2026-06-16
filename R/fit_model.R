@@ -1433,6 +1433,7 @@ fit_model <- function(
       iter = iter_sampling + iter_warmup,
       warmup = iter_warmup,
       seed = seed,
+      open_progres = FALSE,
       verbose = FALSE,
       show_messages = FALSE,
       refresh = refresh,
