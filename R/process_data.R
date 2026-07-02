@@ -57,9 +57,11 @@ process_data <- function(dat,
 
   # check SEs, any missing?
   if (any(is.na(dat$se))){
-    # this we will always print
-    print("Some SEs are NA, these observations are excluded for now.")
-    dat <- dat |> dplyr::filter(!is.na(se))
+    print("Some SEs are NA, we IMPUTE a sampling error of 0.02.")
+    print("Make sure to update your data to include the actual SE!")
+    dat <-
+      dat |>
+      dplyr::mutate(se = ifelse(is.na(se), 0.02, se))
   }
 
   # print("Minimum sampling error set to 1%")
